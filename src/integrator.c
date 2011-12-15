@@ -207,7 +207,7 @@ struct Integrator* CreateIntegrator(struct Simulation* sim,
   }
 
   double* atol = simulationGetATol(integrator->simulation);
-  if (simulationGetATolLength(integrator->simulation) > 1)
+  if (simulationGetATolLength(integrator->simulation) == 1)
   {
 	  flag = CVodeSStolerances(integrator->cvode_mem,simulationGetRTol(integrator->simulation),atol[0]);
 	  if (check_flag(&flag,"CVodeSStolerances",1))

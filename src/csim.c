@@ -427,5 +427,13 @@ static struct Simulation* getSimulation(const char* uri)
 {
 	struct Simulation* simulation = CreateSimulation();
 	DEBUG(0, "getSimulation", "created a blank simulation\n");
+	simulationSetURI(simulation, uri);
+	simulationSetID(simulation, "fred");
+	simulationSetModelURI(simulation, uri);
+	simulationSetBvarURI(simulation, "bob");
+	simulationSetBvarStart(simulation, 0.0);
+	simulationSetBvarEnd(simulation, 6.283185307179586232);
+	simulationSetBvarMaxStep(simulation, 0.1);
+	simulationSetBvarTabStep(simulation, 0.2);
 	return simulation;
 }
