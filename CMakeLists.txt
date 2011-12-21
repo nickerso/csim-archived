@@ -45,6 +45,12 @@ PROJECT(CSim)
 # Add in the directory with the FindCellML module
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CSim_SOURCE_DIR})
 
+IF(WIN32)
+    SET(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+ELSE(WIN32)
+    SET(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+ENDIF(WIN32)
+
 # Can use -DCMAKE_INCLUDE_PATH=$HOME/std-libs/physiome/include -DCMAKE_LIBRARY_PATH=$HOME/std-libs/physiome/lib
 # with cmake command to add extra default search locations or set equivalent
 # ENV variables so the system path specifications get properly converted to cmake
