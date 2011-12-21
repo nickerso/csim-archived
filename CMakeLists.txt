@@ -97,6 +97,7 @@ SET(CSim_SRCS
   src/ccgs_required_functions.cpp
   src/integrator_user_data.c
   src/simulation.c
+  src/xpath.c
   src/csim.c
 )
 

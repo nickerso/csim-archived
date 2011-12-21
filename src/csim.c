@@ -51,6 +51,7 @@
 #include "timer.h"
 #include "integrator_user_data.h"
 #include "integrator.h"
+#include "xpath.h"
 
 /* Just for convenience */
 #define PRE_EXIT_FREE                                         \
@@ -81,8 +82,6 @@ void signalHandler(int s)
 
 static int runSimulation(struct Simulation* simulation,
 		struct CellMLCodeManager* codeManager);
-
-static struct Simulation* getSimulation(const char* uri);
 
 static void printVersion()
 {
@@ -355,6 +354,13 @@ static int runSimulation(struct Simulation* simulation,
 				{ 0.0, 0.0, 0.0 };
 				double dataStoreTimes[3] =
 				{ 0.0, 0.0, 0.0 };
+				printf("%15.10e", tStart);
+				int i;
+				for (i = 0; i < userData->NR; i++)
+					printf("\t%15.10e", userData->STATES[i]);
+				for (i = 0; i < userData->NA; i++)
+					printf("\t%15.10e", userData->ALGEBRAIC[i]);
+				printf("\n");
 				while (1)
 				{
 					DEBUG(5, "runSimulation", "tout = "REAL_FORMAT"\n", tout);
@@ -452,19 +458,4 @@ static int runSimulation(struct Simulation* simulation,
 	}
 	else DEBUG(0, "runSimulation", "Invalid arguments\n");
 	return (code);
-}
-
-static struct Simulation* getSimulation(const char* uri)
-{
-	struct Simulation* simulation = CreateSimulation();
-	DEBUG(0, "getSimulation", "created a blank simulation\n");
-	simulationSetURI(simulation, uri);
-	simulationSetID(simulation, "fred");
-	simulationSetModelURI(simulation, uri);
-	simulationSetBvarURI(simulation, "bob");
-	simulationSetBvarStart(simulation, 0.0);
-	simulationSetBvarEnd(simulation, 6.283185307179586232);
-	simulationSetBvarMaxStep(simulation, 0.1);
-	simulationSetBvarTabStep(simulation, 0.2);
-	return simulation;
 }
