@@ -98,6 +98,7 @@ SET(CSim_SRCS
   src/integrator_user_data.c
   src/simulation.c
   src/xpath.c
+  src/outputVariables.cpp
   src/csim.c
 )
 

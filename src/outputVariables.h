@@ -12,6 +12,6 @@ void* outputVariablesCreate();
 
 void* outputVariablesClone(void* src);
 
-int outputVariablesDestroy(void* outputVariables);
+void outputVariablesDestroy(void* outputVariables);
 
 #endif /* OUTPUTVARIABLES_H_ */

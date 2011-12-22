@@ -14,6 +14,7 @@
 #include "xpath.h"
 #include "simulation.h"
 #include "utils.h"
+#include "outputVariables.h"
 
 static xmlNodeSetPtr executeXPath(xmlDocPtr doc, const xmlChar* xpathExpr);
 static char* getTextContent(xmlDocPtr doc, const xmlChar* xpathExpr);
@@ -65,6 +66,11 @@ struct Simulation* getSimulation(const char* uri)
 	if (getDoubleContent(doc, BAD_CAST "//csim:simulation/csim:boundVariable/@tabulationStep", &number))
 		simulationSetBvarTabStep(simulation, number);
 	else WARNING("getSimulation", "Missing simulation bvar tab step\n");
+
+	void* variableList = outputVariablesCreate();
+
+	simulationSetOutputVariables(simulation, variableList);
+	outputVariablesDestroy(variableList);
 
 	xmlFreeDoc(doc);
 	/* Shutdown libxml */

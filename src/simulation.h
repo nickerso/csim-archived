@@ -163,4 +163,6 @@ int simulationIsRTolSet(struct Simulation* sim);
    0 otherwise */
 int simulationIsValidDescription(struct Simulation* simulation);
 
+int simulationSetOutputVariables(struct Simulation* simulation, void* outputVariables);
+
 #endif /* _METADATA_SIMULATION_H_ */
