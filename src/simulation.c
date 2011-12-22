@@ -43,6 +43,7 @@
 #include "timer.h"
 #include "simulation.h"
 #include "cellml_code_manager.h"
+#include "outputVariables.h"
 
 #define INVALID_MM_STRING "invalid Multistep Method"
 #define INVALID_IM_STRING "invalid Iteration Method"
@@ -75,6 +76,8 @@ struct Simulation
   int aTolLength;
   double rTol;
   int rTolSet;
+  /* the output variables for this simulation */
+  void* outputVariables;
 };
 
 struct Simulation* CreateSimulation()
@@ -108,7 +111,7 @@ struct Simulation* CreateSimulation()
   double atol = 1.0e-8;
   simulationSetRTol(sim,rtol);
   simulationSetATol(sim,1,&atol);
-  
+  sim->outputVariables = NULL;
   return(sim);
 }
 
@@ -138,6 +141,7 @@ struct Simulation* simulationClone(const struct Simulation* src)
       simulationSetATol(sim,src->aTolLength,src->aTol);
     }
     sim->rTol = src->rTol;
+    sim->outputVariables = outputVariablesClone(src->outputVariables);
     return(sim);
   }
   return((struct Simulation*)NULL);
@@ -154,6 +158,7 @@ int DestroySimulation(struct Simulation** sim_ptr)
     if (sim->modelURI) free(sim->modelURI);
     if (sim->bVarURI) free(sim->bVarURI);
     if (sim->aTol) free(sim->aTol);
+    outputVariablesDestroy(sim->outputVariables);
     free(sim);
     *sim_ptr = (struct Simulation*)NULL;
     return(OK);
@@ -607,8 +612,15 @@ int simulationIsValidDescription(struct Simulation* simulation)
             linearSolverToString(simulationGetLinearSolver(simulation)),
             INVALID_LS_STRING) == 0) return(0);
     }
+    if (simulation->outputVariables == NULL) return 0;
     return(1);
   }
   return(0);
 }
 
+int simulationSetOutputVariables(struct Simulation* simulation, void* outputVariables)
+{
+	outputVariablesDestroy(simulation->outputVariables);
+	simulation->outputVariables = outputVariablesClone(outputVariables);
+	return 1;
+}
