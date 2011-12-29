@@ -280,6 +280,7 @@ int main(int argc, char* argv[])
 		{
 			char* simulationName = simulationGetID(simulation);
 			MESSAGE("Running the simulation: %s\n", simulationName);
+			//simulationPrint(simulation, stdout, "###");
 			DEBUG(0, "main", "Running the simulation: %s\n", simulationName);
 			if (runSimulation(simulation, codeManager) == OK)
 			{
@@ -325,15 +326,12 @@ static int runSimulation(struct Simulation* simulation,
 	int code = ERR;
 	if (simulation && simulationIsValidDescription(simulation))
 	{
-		char* modelURI = simulationGetModelURI(simulation);
-		/* now that modelURI is the full URI */
-		char* modelURL = getURIFromURIWithFragmentID(modelURI);
-		struct IntegratorUserData* userData = CreateIntegratorUserDataForModel(
-				codeManager, modelURL);
+		struct IntegratorUserData* userData = CreateIntegratorUserDataForSimulation(
+				codeManager, simulation);
 		if (userData)
 		{
 			DEBUG(0, "runSimulation",
-					"Got the user data for the model: %s\n", modelURI);
+					"Got the user data for the model:\n");
 			integratorUserDataInitialise(userData,
 					simulationGetBvarStart(simulation));
 			struct Integrator* integrator = CreateIntegrator(simulation,
@@ -450,11 +448,7 @@ static int runSimulation(struct Simulation* simulation,
 		}
 		else
 			ERROR("runSimulation", "Error getting the user data for the "
-			"model: %s\n", modelURL);
-		if (modelURI)
-			free(modelURI);
-		if (modelURL)
-			free(modelURL);
+			"model:\n");
 	}
 	else DEBUG(0, "runSimulation", "Invalid arguments\n");
 	return (code);

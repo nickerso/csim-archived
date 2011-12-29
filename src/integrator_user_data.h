@@ -38,6 +38,7 @@
 
 struct CellMLMethods;
 struct CellMLCodeManager;
+struct Simulation;
 
 /* should hide this away? */
 struct IntegratorUserData
@@ -51,8 +52,8 @@ struct IntegratorUserData
   double* RATES; /* Need to keep track of current set of rates */
 };
 
-struct IntegratorUserData* CreateIntegratorUserDataForModel(
-  struct CellMLCodeManager* codeManager,const char* uri);
+struct IntegratorUserData* CreateIntegratorUserDataForSimulation(
+  struct CellMLCodeManager* codeManager, struct Simulation* simulation);
 
 #if defined (OLD_CODE)
 struct IntegratorUserData* CreateIntegratorUserData(const char* soFileName);

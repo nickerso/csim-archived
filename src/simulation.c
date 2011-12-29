@@ -550,6 +550,7 @@ int simulationPrint(struct Simulation* s,FILE* f,const char* indent)
       " "REAL_FORMAT,s->aTol[i]);
     else fprintf(f,"UNSET");
     fprintf(f,"\n");
+    if (s->outputVariables) outputVariablesPrint(s->outputVariables, f, indent);
     fprintf(f,"%sSimulation end\n",indent);
     code = OK;
   }
@@ -623,4 +624,9 @@ int simulationSetOutputVariables(struct Simulation* simulation, void* outputVari
 	outputVariablesDestroy(simulation->outputVariables);
 	simulation->outputVariables = outputVariablesClone(outputVariables);
 	return 1;
+}
+
+void* simulationGetOutputVariables(struct Simulation* simulation)
+{
+	return simulation->outputVariables;
 }

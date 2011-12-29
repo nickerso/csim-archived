@@ -19,6 +19,7 @@
 static xmlNodeSetPtr executeXPath(xmlDocPtr doc, const xmlChar* xpathExpr);
 static char* getTextContent(xmlDocPtr doc, const xmlChar* xpathExpr);
 static int getDoubleContent(xmlDocPtr doc, const xmlChar* xpathExpr, double* value);
+static void* getOutputVariables(xmlDocPtr doc);
 
 /*
  * Need to be able to load in the XML source and create a simulation
@@ -67,10 +68,13 @@ struct Simulation* getSimulation(const char* uri)
 		simulationSetBvarTabStep(simulation, number);
 	else WARNING("getSimulation", "Missing simulation bvar tab step\n");
 
-	void* variableList = outputVariablesCreate();
-
-	simulationSetOutputVariables(simulation, variableList);
-	outputVariablesDestroy(variableList);
+	void* variableList = getOutputVariables(doc);
+	if (variableList)
+	{
+		simulationSetOutputVariables(simulation, variableList);
+		outputVariablesDestroy(variableList);
+	}
+	else WARNING("getSimulation", "Missing simulation output variables\n");
 
 	xmlFreeDoc(doc);
 	/* Shutdown libxml */
@@ -154,4 +158,36 @@ static int getDoubleContent(xmlDocPtr doc, const xmlChar* xpathExpr, double* val
 		xmlXPathFreeNodeSet(results);
 	}
 	return returnCode;
+}
+
+static void* getOutputVariables(xmlDocPtr doc)
+{
+	void* list = 0;
+	xmlNodeSetPtr results = executeXPath(doc, BAD_CAST "//csim:simulation/csim:outputVariable");
+	if (results)
+	{
+		list = outputVariablesCreate();
+		int i, n = xmlXPathNodeSetGetLength(results);
+		for (i = 0; i < n; ++i)
+		{
+			xmlNodePtr node = xmlXPathNodeSetItem(results, i);
+			if (node->type == XML_ELEMENT_NODE)
+			{
+				char* component = (char*)xmlGetProp(node, BAD_CAST "component");
+				char* variable = (char*)xmlGetProp(node, BAD_CAST "variable");
+				char* column = (char*)xmlGetProp(node, BAD_CAST "column");
+				int c;
+				if (sscanf((char*)column, "%d", &c) != 1)
+				{
+					c = -1;
+					ERROR("getOutputVariables", "found a value for a column, but its not a integer: \"%s\"\n", (char*)column);
+				}
+				free(column);
+				outputVariablesAppendVariable(list, component, variable, c);
+				free(component);
+				free(variable);
+			}
+		}
+	}
+	return list;
 }

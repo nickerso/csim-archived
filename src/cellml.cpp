@@ -36,16 +36,18 @@
 #include <iostream>
 #include <inttypes.h>
 #include <exception>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
 #include <string.h>
-#include <wchar.h>
+#include <cwchar>
 #include <vector>
 #include <list>
 #include <algorithm>
 
 #include <IfaceCellML_APISPEC.hxx>
 #include <IfaceCCGS.hxx>
+#include <AnnoToolsBootstrap.hpp>
 #include <CeVASBootstrap.hpp>
 #include <MaLaESBootstrap.hpp>
 #include <CCGSBootstrap.hpp>
@@ -55,6 +57,10 @@
 #include "cellml-utils.h"
 #include "cellml.hpp"
 #include "utils.hxx"
+extern "C"
+{
+#include "outputVariables.h"
+}
 
 #ifdef __cplusplus
 extern "C"
@@ -68,6 +74,7 @@ extern "C"
 struct CellMLModel
 {
   iface::cellml_api::Model* model;
+  iface::cellml_services::AnnotationSet* annotationSet;
   char* uri;
 };
 
@@ -648,6 +655,26 @@ getConnectedVariableIDString(iface::cellml_services::CodeGenerator* cg,
   return(wstr);
 }
 
+static void setOutputVariableIndices(iface::cellml_services::CodeInformation* cci,
+		iface::cellml_services::CodeGenerator* cg, void* outputVariables)
+{
+	RETURN_INTO_OBJREF(as, iface::cellml_services::AnnotationSet, cg->useAnnoSet());
+	RETURN_INTO_OBJREF(cti, iface::cellml_services::ComputationTargetIterator, cci->iterateTargets());
+	while (true)
+	{
+		RETURN_INTO_OBJREF(ct, iface::cellml_services::ComputationTarget, cti->nextComputationTarget());
+		if (ct == NULL) break;
+		RETURN_INTO_WSTRING(column, as->getStringAnnotation(ct->variable(), L"CSim::OutputColumn"));
+		if (column.length() > 0)
+		{
+			RETURN_INTO_STRING(col, wstring2string(column.c_str()));
+			int c = strtol(col.c_str(), NULL, /*base 10*/10);
+			// FIXME: assume this always works since we set the annotation...
+			MESSAGE("Setting output variable column: %d\n", c);
+		}
+	}
+}
+
 /* write out all the cmeta:id's for each variable of the given <vet> type
  */
 static std::wstring
@@ -693,7 +720,7 @@ writeVariableCases(iface::cellml_services::CodeInformation* cci,
 
 static std::wstring
 writeCode(iface::cellml_services::CodeInformation* cci,
-  iface::cellml_services::CodeGenerator* cg,int debugCode)
+  iface::cellml_services::CodeGenerator* cg,void* outputVariables,int debugCode)
 {
   // Assuming here that the code information has been checked using the
   // checkCodeInformation function.
@@ -775,6 +802,9 @@ writeCode(iface::cellml_services::CodeInformation* cci,
   code += formatNumber(cci->constantIndexCount());
   code += L"; }\n";
   
+  // TODO: rather than these different cases, need to only write out the variables that have been annotated with the annotations for the output variables.
+  setOutputVariableIndices(cci, cg, outputVariables);
+
   code += L"const char* getStateVariableIDs(int index)\n{\n"
     L"switch (index)\n{\n";
   code += writeVariableCases(cci,cg,
@@ -898,6 +928,11 @@ CreateCellMLModel(const char* mbrurl)
   }
   // finished with the model loader now
   ml->release_ref();
+  model->annotationSet = 0;
+  /* create an AnnotationSet for use in keeping links between math and variable objects */
+  RETURN_INTO_OBJREF(ats, iface::cellml_services::AnnotationToolService,
+		  CreateAnnotationToolService());
+  model->annotationSet = ats->createAnnotationSet();
   free(URL);
   return(model);
 }
@@ -908,6 +943,7 @@ int DestroyCellMLModel(struct CellMLModel** model)
   {
     (*model)->model->release_ref();
     if ((*model)->uri) free((*model)->uri);
+    if ((*model)->annotationSet) (*model)->annotationSet->release_ref();
     free(*model);
     *model = (struct CellMLModel*)NULL;
     return(0);
@@ -952,7 +988,7 @@ char* getCellMLModelURI(const struct CellMLModel* model)
   return(uri);
 }
 
-char* getCellMLModelAsCCode(struct CellMLModel* model,int debugCode)
+char* getCellMLModelAsCCode(struct CellMLModel* model, void* outputVariables, int debugCode)
 {
   char* code = (char*)NULL;
   if (model && model->model)
@@ -984,6 +1020,9 @@ char* getCellMLModelAsCCode(struct CellMLModel* model,int debugCode)
     free(m);
     cg->useCeVAS(cevas);
     cevas->release_ref();
+
+    // Want to use our annotation set so that we get the custom annotations inside the code generation
+    cg->useAnnoSet(model->annotationSet);
 
     if (debugCode)
     {
@@ -1187,7 +1226,7 @@ L"infinity: #prec[900]1.0/0.0\r\n"
     {
       DEBUG(2,"getCellMLModelAsCCode","Generated code looks ok\n");
       // create the C code with the generated code
-      std::wstring Code = writeCode(cci,cg,debugCode);
+      std::wstring Code = writeCode(cci,cg,outputVariables,debugCode);
       code = wstring2string(Code.c_str());
       /* and finished with this */
       cci->release_ref();
@@ -1499,3 +1538,30 @@ resolveAbsoluteURL(iface::cellml_api::Model* aModel,std::wstring aURL)
   return(aURL);
 }
 
+// annotate the output variable's sources so that we can find them in the list of computation targets later on...
+void annotateCellMLModelOutputs(struct CellMLModel* model, void* outputVariables)
+{
+	RETURN_INTO_OBJREF(localComponents, iface::cellml_api::CellMLComponentSet,
+			model->model->localComponents());
+	int l = outputVariablesGetLength(outputVariables);
+	for (int i = 0; i < l; ++i)
+	{
+		RETURN_INTO_WSTRING(cname, string2wstring(outputVariablesGetComponent(outputVariables, i)));
+		RETURN_INTO_OBJREF(component, iface::cellml_api::CellMLComponent,
+				localComponents->getComponent(cname.c_str()));
+		if (component)
+		{
+			RETURN_INTO_WSTRING(vname, string2wstring(outputVariablesGetVariable(outputVariables, i)));
+			RETURN_INTO_OBJREF(variables, iface::cellml_api::CellMLVariableSet, component->variables());
+			RETURN_INTO_OBJREF(variable, iface::cellml_api::CellMLVariable,
+					variables->getVariable(vname.c_str()));
+			if (variable)
+			{
+				RETURN_INTO_OBJREF(src, iface::cellml_api::CellMLVariable, variable->sourceVariable());
+				wchar_t column[128];
+				swprintf(column, 128, L"%d\0", outputVariablesGetColumn(outputVariables, i));
+				model->annotationSet->setStringAnnotation(src, L"CSim::OutputColumn", column);
+			}
+		}
+	}
+}

@@ -48,7 +48,8 @@ extern "C"
   struct CellMLModel* cellMLModelClone(const struct CellMLModel* src);
   char* getCellMLModelId(const struct CellMLModel* model);
   char* getCellMLModelURI(const struct CellMLModel* model);
-  char* getCellMLModelAsCCode(struct CellMLModel* model,int debugCode);
+  char* getCellMLModelAsCCode(struct CellMLModel* model, void* outputVariables, int debugCode);
+  void annotateCellMLModelOutputs(struct CellMLModel* model, void* outputVariables);
 #if defined (OLD_CODE)
   int cellmlModelSetVariableInitialValue(struct CellMLModel* model,
     const char* component,const char* variable,const char* value);

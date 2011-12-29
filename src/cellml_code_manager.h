@@ -40,6 +40,7 @@
    same code */
 struct CellMLCodeManager;
 struct CellMLMethods;
+struct Simulation;
   
 struct CellMLCodeManager* CreateCellMLCodeManager(int saveFiles,
   const char* cCompiler,int generateDebugCode);
@@ -47,8 +48,8 @@ struct CellMLCodeManager* CreateCellMLCodeManager(int saveFiles,
    a reference count...maybe later */
 int DestroyCellMLCodeManager(struct CellMLCodeManager** manager);
 
-struct CellMLMethods* cellmlCodeManagerGetMethodsForModel(
-  struct CellMLCodeManager* manager,const char* uri);
+struct CellMLMethods* cellmlCodeManagerGetMethodsForSimulation(
+  struct CellMLCodeManager* manager, struct Simulation* simulation);
   
 #endif /* _CELLML_CODE_MANAGER_H_ */
 

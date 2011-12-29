@@ -43,6 +43,7 @@
 #include "cellml.h"
 #include "cellml_code_manager.h"
 #include "cellml_methods.h"
+#include "simulation.h"
 
 int PauseForCodeChanges = 0;
 
@@ -97,7 +98,7 @@ int DestroyCode(struct Code** _ptr)
   return(c);
 }
 
-struct Code* CreateCode(const char* modelURI,int save,const char* gcc,
+struct Code* CreateCode(struct Simulation* simulation,const char* modelURI,int save,const char* gcc,
   int generateDebugCode)
 {
   struct Code* code = (struct Code*)NULL;
@@ -117,8 +118,10 @@ struct Code* CreateCode(const char* modelURI,int save,const char* gcc,
     struct CellMLModel* cellmlModel = CreateCellMLModel(modelURI);
     if (cellmlModel)
     {
+    	annotateCellMLModelOutputs(cellmlModel, simulationGetOutputVariables(simulation));
       /* generate some code */
-      char* code_string = getCellMLModelAsCCode(cellmlModel,generateDebugCode);
+      char* code_string = getCellMLModelAsCCode(cellmlModel,simulationGetOutputVariables(simulation),
+    		  generateDebugCode);
       if (code_string)
       {
         DEBUG(1,"CreateCode",
@@ -231,12 +234,14 @@ int DestroyCellMLCodeManager(struct CellMLCodeManager** _ptr)
   return(c);
 }
 
-struct CellMLMethods* cellmlCodeManagerGetMethodsForModel(
-  struct CellMLCodeManager* manager,const char* uri)
+struct CellMLMethods* cellmlCodeManagerGetMethodsForSimulation(
+  struct CellMLCodeManager* manager,struct Simulation* simulation)
 {
   struct CellMLMethods* methods = (struct CellMLMethods*)NULL;
-  if (manager && uri)
+  if (manager && simulation)
   {
+	char* modelURI = simulationGetModelURI(simulation);
+	char* uri = getURIFromURIWithFragmentID(modelURI);
     /* first look for a code that matches the given model URI */
     if (manager->codes)
     {
@@ -258,10 +263,10 @@ struct CellMLMethods* cellmlCodeManagerGetMethodsForModel(
     }
     if (methods == NULL)
     {
-      DEBUG(1,"cellmlCodeManagerGetMethodsForModel","Did not find exisiting "
+      DEBUG(1,"cellmlCodeManagerGetMethodsForModel","Did not find existing "
         "model code, so making a new one for model: %s\n",uri);
       /* didn't find the code for the model */
-      struct Code* code = CreateCode(uri,manager->saveTempFiles,
+      struct Code* code = CreateCode(simulation,uri,manager->saveTempFiles,
         manager->cCompiler,manager->generateDebugCode);
       if (code)
       {
