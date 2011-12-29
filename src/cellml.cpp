@@ -915,7 +915,7 @@ CreateCellMLModel(const char* mbrurl)
   {
     model->model = ml->loadFromURL(URL);
     /* and make sure it is fully instantiated */
-    /*model->model->fullyInstantiateImports();*/
+    model->model->fullyInstantiateImports();
   }
   catch (...)
   {
@@ -933,6 +933,7 @@ CreateCellMLModel(const char* mbrurl)
   RETURN_INTO_OBJREF(ats, iface::cellml_services::AnnotationToolService,
 		  CreateAnnotationToolService());
   model->annotationSet = ats->createAnnotationSet();
+  DEBUG(0, "CreateCellMLModel", "Created the annotation set\n");
   free(URL);
   return(model);
 }
@@ -1543,6 +1544,7 @@ void annotateCellMLModelOutputs(struct CellMLModel* model, void* outputVariables
 {
 	RETURN_INTO_OBJREF(localComponents, iface::cellml_api::CellMLComponentSet,
 			model->model->localComponents());
+	DEBUG(0, "annotateCellMLModelOutputs", "Got the local components\n");
 	int l = outputVariablesGetLength(outputVariables);
 	for (int i = 0; i < l; ++i)
 	{
@@ -1551,13 +1553,16 @@ void annotateCellMLModelOutputs(struct CellMLModel* model, void* outputVariables
 				localComponents->getComponent(cname.c_str()));
 		if (component)
 		{
+			DEBUG(0, "annotateCellMLModelOutputs", "Got the local component: %s\n", outputVariablesGetComponent(outputVariables, i));
 			RETURN_INTO_WSTRING(vname, string2wstring(outputVariablesGetVariable(outputVariables, i)));
 			RETURN_INTO_OBJREF(variables, iface::cellml_api::CellMLVariableSet, component->variables());
 			RETURN_INTO_OBJREF(variable, iface::cellml_api::CellMLVariable,
 					variables->getVariable(vname.c_str()));
 			if (variable)
 			{
+				DEBUG(0, "annotateCellMLModelOutputs", "Got the variable: %s\n", outputVariablesGetVariable(outputVariables, i));
 				RETURN_INTO_OBJREF(src, iface::cellml_api::CellMLVariable, variable->sourceVariable());
+				DEBUG(0, "annotateCellMLModelOutputs", "Got the source variable\n");
 				wchar_t column[128];
 				swprintf(column, 128, L"%d\0", outputVariablesGetColumn(outputVariables, i));
 				model->annotationSet->setStringAnnotation(src, L"CSim::OutputColumn", column);
