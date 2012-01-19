@@ -352,12 +352,9 @@ static int runSimulation(struct Simulation* simulation,
 				{ 0.0, 0.0, 0.0 };
 				double dataStoreTimes[3] =
 				{ 0.0, 0.0, 0.0 };
-				printf("%15.10e", tStart);
 				int i;
-				for (i = 0; i < userData->NR; i++)
-					printf("\t%15.10e", userData->STATES[i]);
-				for (i = 0; i < userData->NA; i++)
-					printf("\t%15.10e", userData->ALGEBRAIC[i]);
+				for (i = 0; i < userData->NO; i++)
+					printf("\t%15.10e", userData->OUTPUTS[i]);
 				printf("\n");
 				while (1)
 				{
@@ -368,14 +365,9 @@ static int runSimulation(struct Simulation* simulation,
 							integrate, integrator, userData, tout, &t);
 					if (code == OK)
 					{
-						//TIME_FUNCTION_CALL(dataStoreTimes,dataTimer,code,
-						//		simulationAppendResults,simulation,t,userData);
-						printf("%15.10e", t);
 						int i;
-						for (i = 0; i < userData->NR; i++)
-							printf("\t%15.10e", userData->STATES[i]);
-						for (i = 0; i < userData->NA; i++)
-							printf("\t%15.10e", userData->ALGEBRAIC[i]);
+						for (i = 0; i < userData->NO; i++)
+							printf("\t%15.10e", userData->OUTPUTS[i]);
 						printf("\n");
 						if (code == OK)
 						{

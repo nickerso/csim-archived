@@ -44,10 +44,17 @@ struct CellMLMethods
   int (*getNrates)();
   int (*getNalgebraic)();
   int (*getNconstants)();
+  int (*getNoutputs)();
+  /* Set up the output array ready for writing.
+   */
+  void (*GetOutputs)(double VOI,double* CONSTANTS,double* STATES,double* ALGEBRAIC,double* outputs);
+
+#if 0
   const char* (*getStateVariableIDs)(int index);
   const char* (*getConstantVariableIDs)(int index);
   const char* (*getAlgebraicVariableIDs)(int index);
   const char* (*getVariableOfIntegrationIDs)();
+#endif
   /* Initialise all variables which aren't state variables but have an
    * initial_value attribute, and any variables & rates which follow.
    */

@@ -82,7 +82,10 @@ struct CellMLMethods* CreateCellMLMethods(const char* soFileName)
   if (check_method(m->getNalgebraic,"getNalgebraic") == ERR) err = ERR;
   m->getNconstants = (int (*)())dlsym(m->soHandle,"getNconstants");
   if (check_method(m->getNconstants,"getNconstants") == ERR) err = ERR;
+  m->getNoutputs = (int (*)())dlsym(m->soHandle,"getNoutputs");
+  if (check_method(m->getNoutputs,"getNoutputs") == ERR) err = ERR;
 
+#if 0
   m->getStateVariableIDs = (const char* (*)(int))
     dlsym(m->soHandle,"getStateVariableIDs");
   if (check_method(m->getStateVariableIDs,
@@ -99,6 +102,7 @@ struct CellMLMethods* CreateCellMLMethods(const char* soFileName)
     dlsym(m->soHandle,"getVariableOfIntegrationIDs");
   if (check_method(m->getVariableOfIntegrationIDs,
       "getVariableOfIntegrationIDs") == ERR) err = ERR;
+#endif
 
   m->SetupFixedConstants = (void (*)(double*,double*,double*))
     dlsym(m->soHandle,"SetupFixedConstants");
@@ -110,6 +114,9 @@ struct CellMLMethods* CreateCellMLMethods(const char* soFileName)
   m->EvaluateVariables = (void (*)(double,double*,double*,double*,double*))
     dlsym(m->soHandle,"EvaluateVariables");
   if (check_method(m->EvaluateVariables,"EvaluateVariables") == ERR) err = ERR;
+  m->GetOutputs = (void (*)(double,double*,double*,double*,double*))
+      dlsym(m->soHandle,"GetOutputs");
+  if (check_method(m->GetOutputs,"GetOutputs") == ERR) err = ERR;
   if (err == ERR)
   {
     DestroyCellMLMethods(&m);

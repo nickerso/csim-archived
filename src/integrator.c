@@ -434,6 +434,8 @@ int integrate(struct Integrator* integrator,struct IntegratorUserData* ud,
     ud->VARIABLES);
 #endif
   
+  /* Make sure the outputs are up-to-date */
+  ud->methods->GetOutputs(*(ud->BOUND), ud->CONSTANTS, ud->STATES, ud->ALGEBRAIC, ud->OUTPUTS);
   return(OK);
 }
 

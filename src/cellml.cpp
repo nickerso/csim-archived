@@ -598,7 +598,7 @@ writeVariableNameCases(iface::cellml_services::CodeInformation* cci)
 } // writeVariableNameCases
 #endif
 
-
+#if 0
 /* given a computation target and a code generator, grab the generator's
  * CeVAS and use it to assemble a string listing the cmeta:id's of all
  * variables connected to the computation target's variable.
@@ -654,12 +654,13 @@ getConnectedVariableIDString(iface::cellml_services::CodeGenerator* cg,
   }
   return(wstr);
 }
+#endif
 
 static std::wstring writeOutputFunction(iface::cellml_services::CodeInformation* cci,
 		iface::cellml_services::CodeGenerator* cg, void* outputVariables)
 {
 	std::wstring code;
-	code += L"void SetOutputs(double VOI,double* CONSTANTS,"
+	code += L"void GetOutputs(double VOI,double* CONSTANTS,"
 	    L"double* STATES, double* ALGEBRAIC, double* outputs)\n{\n";
 	RETURN_INTO_OBJREF(as, iface::cellml_services::AnnotationSet, cg->useAnnoSet());
 	RETURN_INTO_OBJREF(cti, iface::cellml_services::ComputationTargetIterator, cci->iterateTargets());
@@ -677,12 +678,12 @@ static std::wstring writeOutputFunction(iface::cellml_services::CodeInformation*
 			int c = strtol(col.c_str(), NULL, /*base 10*/10);
 			// FIXME: assume this always works since we set the annotation...
 			code += L"outputs[";
-			code += formatNumber(c);
+			code += formatNumber(c-1);
 			code += L"] = ";
 			switch (ct->type())
 			{
 			case iface::cellml_services::STATE_VARIABLE:
-				code += L"STATE[";
+				code += L"STATES[";
 				break;
 			case iface::cellml_services::ALGEBRAIC:
 				code += L"ALGEBRAIC[";
@@ -709,6 +710,7 @@ static std::wstring writeOutputFunction(iface::cellml_services::CodeInformation*
 	return code;
 }
 
+#if 0
 /* write out all the cmeta:id's for each variable of the given <vet> type
  */
 static std::wstring
@@ -751,6 +753,7 @@ writeVariableCases(iface::cellml_services::CodeInformation* cci,
   cti->release_ref();
   return(wstr);
 }
+#endif
 
 static std::wstring
 writeCode(iface::cellml_services::CodeInformation* cci,
@@ -841,8 +844,9 @@ writeCode(iface::cellml_services::CodeInformation* cci,
   
   // TODO: rather than these different cases, need to only write out the variables that have been annotated with the annotations for the output variables.
   std::wstring outputString = writeOutputFunction(cci, cg, outputVariables);
-  fprintf(stdout, "output function: %S\n", outputString.c_str());
+  code += outputString;
 
+#if 0
   code += L"const char* getStateVariableIDs(int index)\n{\n"
     L"switch (index)\n{\n";
   code += writeVariableCases(cci,cg,
@@ -886,6 +890,7 @@ writeCode(iface::cellml_services::CodeInformation* cci,
   delete [] frag;
   */
   code += L"}\n";
+#endif
 
   // Now start the model code...
   

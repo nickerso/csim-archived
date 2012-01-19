@@ -44,12 +44,13 @@ struct Simulation;
 struct IntegratorUserData
 {
   struct CellMLMethods* methods;
-  int NA,NB,NC,NR;
+  int NA,NB,NC,NR,NO;
   double* BOUND;
   double* CONSTANTS;
   double* STATES;
   double* ALGEBRAIC;
   double* RATES; /* Need to keep track of current set of rates */
+  double* OUTPUTS; /* The outputs as requested in the simulation description */
 };
 
 struct IntegratorUserData* CreateIntegratorUserDataForSimulation(

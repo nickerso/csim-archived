@@ -60,6 +60,7 @@ struct IntegratorUserData* CreateIntegratorUserDataForSimulation(
 			ud->STATES = (double*) NULL;
 			ud->ALGEBRAIC = (double*) NULL;
 			ud->RATES = (double*) NULL;
+			ud->OUTPUTS = (double*) NULL;
 			/* try to load the cellml model methods */
 			if ((ud->methods = cellmlCodeManagerGetMethodsForSimulation(codeManager,
 					simulation)))
@@ -74,6 +75,8 @@ struct IntegratorUserData* CreateIntegratorUserDataForSimulation(
 				ud->STATES = (double*) calloc(ud->NR, sizeof(double));
 				ud->NA = ud->methods->getNalgebraic();
 				ud->ALGEBRAIC = (double*) calloc(ud->NA, sizeof(double));
+				ud->NO = ud->methods->getNoutputs();
+				ud->OUTPUTS = (double*) calloc(ud->NO, sizeof(double));
 			}
 			else
 			{
@@ -143,6 +146,8 @@ int DestroyIntegratorUserData(struct IntegratorUserData** ud_ptr)
 			free(ud->ALGEBRAIC);
 		if (ud->RATES)
 			free(ud->RATES);
+		if (ud->OUTPUTS)
+			free(ud->OUTPUTS);
 		free(ud);
 		*ud_ptr = (struct IntegratorUserData*) NULL;
 		code = OK;
@@ -162,6 +167,7 @@ int integratorUserDataInitialise(struct IntegratorUserData *ud, double value)
 				ud->CONSTANTS, ud->ALGEBRAIC);
 		ud->methods->EvaluateVariables(*(ud->BOUND), ud->CONSTANTS, ud->RATES,
 				ud->STATES, ud->ALGEBRAIC);
+		ud->methods->GetOutputs(*(ud->BOUND), ud->CONSTANTS, ud->STATES, ud->ALGEBRAIC, ud->OUTPUTS);
 		code = OK;
 	}
 	return (code);
