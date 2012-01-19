@@ -97,14 +97,14 @@ static void printVersion()
 
 static void usage(char* prog)
 {
-	printf("Examines given input file (CellML or RDF/XML) and executes the\n"
-			"analysis, graphs, and/or simulations that are found.\n\n");
+	printf("Examines given input CellML and executes the\n"
+			"simulation that is found, writing the simulation outputs to the terminal.\n\n");
 	printf("Usage: %s [options] <input file>\n\n", prog);
 	printf(
 			"Available options:\n"
 					"  --help\n\tDisplay help and exit.\n"
 					"  --version\n\tDisplay version information and exit.\n"
-					"  --quiet\n\tTurn off all printing to terminal.\n"
+					"  --quiet\n\tTurn off all printing to terminal except the simulation outputs.\n"
 					"  --save-temp-files\n"
 					"\tSave the temporary files generated from CellML.\n"
 					"  --debug\n"
@@ -115,37 +115,25 @@ static void usage(char* prog)
 					"\tGenerate code with debug bits included, useful for finding errors in "
 					"models.\n"
 					"\n");
-	printf(
-			"Examples:\n"
-					"  CellMLSimulator --data results.h5 graph-description.rdf\n"
-					"\tProcess the graph descriptions in graph-description.rdf and create\n"
-					"\tthe default pngcairo format graphs in the current directory. Simulation\n"
-					"\tresults are stored in results.h5, which is first checked for existing\n"
-					"\tsimulation results.\n"
-					"  CellMLSimulator --data results.h5 --graph-format=csv "
-					"graph-description.rdf\n"
-					"\tThe same but now writing out CSV text files with the graph data.\n");
 }
 
 static void help(char* prog)
 {
 	usage(prog);
 	printf("\n\n");
-	printf("bob\n"
-			"\n");
 	const char const * sundials_version = getSundialsVersion();
 	printf("Useful links:\n"
 			"http://cellml.sourceforge.net\n"
 			"http://www.cellml.org\n"
 			"http://www.cellml.org/specifications\n"
 			"\n"
-			"CellMLSimulator uses:\n"
+			"%s uses:\n"
 			"- The CellML API (version 1.10)\n"
 			"  http://www.cellml.org\n"
 			"- The CVODES integrator from sundials (version %s)\n"
-			"  http://www.llnl.gov/CASC/sundials/\n", sundials_version);
+			"  http://www.llnl.gov/CASC/sundials/\n", prog, sundials_version);
 	printf("\n");
-	printf("Report bugs at http://sourceforge.net/projects/cellml\n");
+	printf("Report bugs to nickerso@users.sourceforge.net\n");
 }
 /*
  *-------------------------------
