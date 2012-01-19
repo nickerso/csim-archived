@@ -128,7 +128,7 @@ static void help(char* prog)
 			"http://www.cellml.org/specifications\n"
 			"\n"
 			"%s uses:\n"
-			"- The CellML API (version 1.10)\n"
+			"- The CellML API (version 1.6)\n"
 			"  http://www.cellml.org\n"
 			"- The CVODES integrator from sundials (version %s)\n"
 			"  http://www.llnl.gov/CASC/sundials/\n", prog, sundials_version);
