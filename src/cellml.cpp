@@ -655,24 +655,58 @@ getConnectedVariableIDString(iface::cellml_services::CodeGenerator* cg,
   return(wstr);
 }
 
-static void setOutputVariableIndices(iface::cellml_services::CodeInformation* cci,
+static std::wstring writeOutputFunction(iface::cellml_services::CodeInformation* cci,
 		iface::cellml_services::CodeGenerator* cg, void* outputVariables)
 {
+	std::wstring code;
+	code += L"void SetOutputs(double VOI,double* CONSTANTS,"
+	    L"double* STATES, double* ALGEBRAIC, double* outputs)\n{\n";
 	RETURN_INTO_OBJREF(as, iface::cellml_services::AnnotationSet, cg->useAnnoSet());
 	RETURN_INTO_OBJREF(cti, iface::cellml_services::ComputationTargetIterator, cci->iterateTargets());
 	while (true)
 	{
 		RETURN_INTO_OBJREF(ct, iface::cellml_services::ComputationTarget, cti->nextComputationTarget());
 		if (ct == NULL) break;
-		RETURN_INTO_WSTRING(column, as->getStringAnnotation(ct->variable(), L"CSim::OutputColumn"));
+		// We are not able to address rate variables anyway, so only need to look at variables of degree 0.
+		if (ct->degree() != 0) continue;
+		RETURN_INTO_OBJREF(variable, iface::cellml_api::CellMLVariable, ct->variable());
+		RETURN_INTO_WSTRING(column, as->getStringAnnotation(variable, L"CSim::OutputColumn"));
 		if (column.length() > 0)
 		{
 			RETURN_INTO_STRING(col, wstring2string(column.c_str()));
 			int c = strtol(col.c_str(), NULL, /*base 10*/10);
 			// FIXME: assume this always works since we set the annotation...
-			MESSAGE("Setting output variable column: %d\n", c);
+			code += L"outputs[";
+			code += formatNumber(c);
+			code += L"] = ";
+			switch (ct->type())
+			{
+			case iface::cellml_services::STATE_VARIABLE:
+				code += L"STATE[";
+				break;
+			case iface::cellml_services::ALGEBRAIC:
+				code += L"ALGEBRAIC[";
+				break;
+			case iface::cellml_services::CONSTANT:
+				code += L"CONSTANT[";
+				break;
+			case iface::cellml_services::VARIABLE_OF_INTEGRATION:
+				code += L"VOI";
+				break;
+			default:
+				code += L"Should never see this";
+				break;
+			}
+			if (ct->type() != iface::cellml_services::VARIABLE_OF_INTEGRATION)
+			{
+				code += formatNumber(ct->assignedIndex());
+				code += L"]";
+			}
+			code += L";\n";
 		}
 	}
+	code += L"\n}\n";
+	return code;
 }
 
 /* write out all the cmeta:id's for each variable of the given <vet> type
@@ -801,9 +835,13 @@ writeCode(iface::cellml_services::CodeInformation* cci,
   code += L"int getNconstants() { return ";
   code += formatNumber(cci->constantIndexCount());
   code += L"; }\n";
+  code += L"int getNoutputs() { return ";
+  code += formatNumber(outputVariablesGetLength(outputVariables));
+  code += L"; }\n";
   
   // TODO: rather than these different cases, need to only write out the variables that have been annotated with the annotations for the output variables.
-  setOutputVariableIndices(cci, cg, outputVariables);
+  std::wstring outputString = writeOutputFunction(cci, cg, outputVariables);
+  fprintf(stdout, "output function: %S\n", outputString.c_str());
 
   code += L"const char* getStateVariableIDs(int index)\n{\n"
     L"switch (index)\n{\n";
