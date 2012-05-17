@@ -42,6 +42,7 @@
 
 #include <IfaceCellML_APISPEC.hxx>
 #include <CellMLBootstrap.hpp>
+#include <cellml-api-cxx-support.hpp>
 
 #include "cellml-utils.h"
 #include "utils.hxx"
@@ -130,9 +131,8 @@ char* getCellMLMetadataAsRDFXMLString(const char* mbrurl)
   if (rr)
   {
     DECLARE_QUERY_INTERFACE(rrs,rr,cellml_api::RDFXMLStringRepresentation);
-    wchar_t* rdf = rrs->serialisedData();
-    string = wstring2string(rdf);
-    free(rdf);
+    std::wstring rdf = rrs->serialisedData();
+    string = wstring2string(rdf.c_str());
   }
   model->release_ref();
   return(string);

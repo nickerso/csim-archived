@@ -40,7 +40,10 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+// not working on mac os x
+#if 0
 #include <malloc.h>
+#endif
 
 #include "timer.h"
 
@@ -198,6 +201,9 @@ void printMemoryStats()
   printf("voluntary context switches: %ld\n",ru_nvcsw);
   printf("involuntary context switches: %ld\n",ru_nivcsw);
 #endif
+// not working on mac os x
+#if 0
+
   /* apparently casting the int's inside mallinfo to unsigned int's will
      get the right sizes if you are using more than 2GB...maybe */
   struct mallinfo mInfo = mallinfo();
@@ -210,6 +216,7 @@ void printMemoryStats()
   printf("  Total allocated space: %u bytes\n",systemBytes);
   printf("                 in use: %u bytes\n",inUseBytes);
   printf("                   free: %u bytes\n",freeBytes);
+#endif
 #if 0
   printf("non-mmapped space allocated from system: %d\n",mInfo.arena);
   printf("number of free chunks: %d\n",mInfo.ordblks);

@@ -52,6 +52,7 @@
 #include <MaLaESBootstrap.hpp>
 #include <CCGSBootstrap.hpp>
 #include <CellMLBootstrap.hpp>
+#include <cellml-api-cxx-support.hpp>
 
 #include "cellml.h"
 #include "cellml-utils.h"
@@ -109,6 +110,10 @@ TypeToString(iface::cellml_services::VariableEvaluationType vet)
     return L"algebraic variable";
   case iface::cellml_services::FLOATING:
     return L"uncomputed";
+  case iface::cellml_services::LOCALLY_BOUND:
+      return L"locally bound";
+  case iface::cellml_services::PSEUDOSTATE_VARIABLE:
+      return L"pseudo-state variable";
   }
 
   return L"invalid type";
@@ -139,8 +144,8 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
         continue;
       }
       iface::cellml_api::CellMLVariable* v = ct->variable();
-      wchar_t* n = v->name();
-      wchar_t* c = v->componentName();
+      std::wstring n = v->name();
+      std::wstring c = v->componentName();
       std::wstring str = L" * ";
       uint32_t deg = ct->degree();
       if (deg != 0)
@@ -157,8 +162,6 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
       str += L" (in ";
       str += c;
       str += L")\n";
-      free(n);
-      free(c);
       messages.push_back(str);
       v->release_ref();
       ct->release_ref();
@@ -191,7 +194,7 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
         continue;
       }
       iface::cellml_api::CellMLVariable* v = ct->variable();
-      wchar_t* n = v->name();
+      std::wstring n = v->name();
       std::wstring str = L" * ";
       uint32_t deg = ct->degree();
       if (deg != 0)
@@ -205,7 +208,6 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
         str += L" ";
       }
       str += n;
-      free(n);
       str += L"\n";
       messages.push_back(str);
       v->release_ref();
@@ -229,12 +231,11 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
                                                "dom::Element"));
     n->release_ref();
 
-    wchar_t* cmeta =
+    std::wstring cmeta =
       el->getAttributeNS(L"http://www.cellml.org/metadata/1.0#",L"id");
-    if (!wcscmp(cmeta, L"")) fprintf(stderr,
+    if (!wcscmp(cmeta.c_str(), L"")) fprintf(stderr,
       " *   <equation with no cmeta ID>\n");
-    else fprintf(stderr," *   %S\n", cmeta);
-    free(cmeta);
+    else fprintf(stderr," *   %S\n", cmeta.c_str());
 
     n = el->parentNode();
     el->release_ref();
@@ -244,11 +245,10 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
     n->release_ref();
 
     cmeta = el->getAttributeNS(L"http://www.cellml.org/metadata/1.0#", L"id");
-    if (!wcscmp(cmeta, L""))
+    if (!wcscmp(cmeta.c_str(), L""))
       fprintf(stderr," *   in <math with no cmeta ID>\n");
     else
-      fprintf(stderr," *   in math with cmeta:id %S\n", cmeta);
-    free(cmeta);
+        fprintf(stderr," *   in math with cmeta:id %S\n", cmeta.c_str());
     el->release_ref();
 
     fprintf(stderr,"\n");
@@ -286,9 +286,8 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
         str += L" ";
       }
       iface::cellml_api::CellMLVariable* v = ct->variable();
-      wchar_t* n = v->name();
+      std::wstring n = v->name();
       str += n;
-      free(n);
       str += L"\n";
       messages.push_back(str);
       v->release_ref();
@@ -325,12 +324,11 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
         (n->query_interface("dom::Element"));*/
       n->release_ref();
       
-      wchar_t* cmeta = el->getAttribute(L"id");
-      if (!wcscmp(cmeta, L""))
+      std::wstring cmeta = el->getAttribute(L"id");
+      if (!wcscmp(cmeta.c_str(), L""))
         printf(" *   <equation with no ID>\n");
       else
-        printf(" *   %S\n", cmeta);
-      free(cmeta);
+          printf(" *   %S\n", cmeta.c_str());
       
       n = el->parentNode();
       el->release_ref();
@@ -342,11 +340,10 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
       
       cmeta = el->getAttributeNS(L"http://www.cellml.org/metadata/1.0#",
                                  L"id");
-      if (!wcscmp(cmeta, L""))
+      if (!wcscmp(cmeta.c_str(), L""))
         printf(" *   in <math with no cmeta ID>\n");
       else
-        printf(" *   in math with cmeta:id %S\n", cmeta);
-      free(cmeta);
+          printf(" *   in math with cmeta:id %S\n", cmeta.c_str());
       el->release_ref();
     }
     mnl->release_ref();
@@ -377,7 +374,7 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
       el->release_ref();
 
       std::wstring str;
-      wchar_t* vn = v->name(), * cn = c->name();
+      std::wstring vn = v->name(), cn = c->name();
       str += L" * * Target ";
       uint32_t deg = ct->degree();
       if (deg != 0)
@@ -394,8 +391,6 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
       str += L" in component ";
       str += cn;
       str += L"\n";
-      free(vn);
-      free(cn);
       
       c->release_ref();
       v->release_ref();
@@ -408,10 +403,8 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
       str += buf;
 
       str += L" * * * Variable storage: ";
-      wchar_t * vsn;
-      vsn = ct->name();
+      std::wstring vsn = ct->name();
       str += vsn;
-      free(vsn);
       str += '\n';
 
       ct->release_ref();
@@ -451,7 +444,7 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
       el->release_ref();
 
       std::wstring str;
-      wchar_t* vn = v->name(), * cn = c->name();
+      std::wstring vn = v->name(), cn = c->name();
       uint32_t deg = ct->degree();
       if (deg != 0)
       {
@@ -466,8 +459,6 @@ checkCodeInformation(iface::cellml_services::CodeInformation* cci,
       str += vn;
       str += L" in component ";
       str += cn;
-      free(vn);
-      free(cn);
       
       c->release_ref();
       v->release_ref();
@@ -808,9 +799,8 @@ writeCode(iface::cellml_services::CodeInformation* cci,
     L"}\n";
   */
 
-  wchar_t* frag = cci->functionsString();
+  std::wstring frag = cci->functionsString();
   code += frag;
-  free(frag);
 
   /* if generating debug code we need some extra methods */
   if (debugCode)
@@ -905,7 +895,6 @@ writeCode(iface::cellml_services::CodeInformation* cci,
     "double* STATES)\n{\n";
   code += frag;
   code += L"}\n";
-  free(frag);
 
   /* rates      - All rates which are not static.
    */
@@ -914,7 +903,6 @@ writeCode(iface::cellml_services::CodeInformation* cci,
     L"double* CONSTANTS,double* ALGEBRAIC)\n{\n";
   code += frag;
   code += L"}\n";
-  free(frag);
 
   /* variables  - All variables not computed by initConsts or rates
    *  (i.e., these are not required for the integration of the model and
@@ -926,7 +914,6 @@ writeCode(iface::cellml_services::CodeInformation* cci,
     L"double* RATES, double* STATES, double* ALGEBRAIC)\n{\n";
   code += frag;
   code += L"}\n";
-  free(frag);
   
   return(code);
 } // writeCode
@@ -1014,9 +1001,8 @@ char* getCellMLModelId(const struct CellMLModel* model)
   char* id = (char*)NULL;
   if (model)
   {
-    wchar_t* ID = model->model->cmetaId();
-    id = wstring2string(ID);
-    free(ID);
+    std::wstring ID = model->model->cmetaId();
+    id = wstring2string(ID.c_str());
   }
   return(id);
 }
@@ -1052,16 +1038,14 @@ char* getCellMLModelAsCCode(struct CellMLModel* model, void* outputVariables, in
       cbs->createCeVASForModel(model->model);
     cbs->release_ref();
     /* check for errors in the CeVAS */
-    wchar_t* m = cevas->modelError();
-    if (wcscmp(m, L""))
+    std::wstring m = cevas->modelError();
+    if (wcscmp(m.c_str(), L""))
     {
-      ERROR("getCellMLModelAsCCode","Error creating CeVAS: %S\n",m);
-      free(m);
+        ERROR("getCellMLModelAsCCode","Error creating CeVAS: %S\n",m.c_str());
       cevas->release_ref();
       cg->release_ref();
       return(code);
     }
-    free(m);
     cg->useCeVAS(cevas);
     cevas->release_ref();
 
@@ -1254,15 +1238,13 @@ L"infinity: #prec[900]1.0/0.0\r\n"
     }
     /* check for errors in generating the code */
     m = cci->errorMessage();
-    if (wcscmp(m, L""))
+    if (wcscmp(m.c_str(), L""))
     {
-      ERROR("getCellMLModelAsCCode","Error generating code: %S\n",m);
+        ERROR("getCellMLModelAsCCode","Error generating code: %S\n",m.c_str());
       cci->release_ref();
-      free(m);
       cg->release_ref();
       return(code);
     }
-    free(m);
     
     DEBUG(2,"getCellMLModelAsCCode","Generated code\n");
     // We now have the code information, so check it
