@@ -22,6 +22,8 @@ extern "C"
 #include "xpath.h"
 }
 #include "CellmlCode.hpp"
+#include "ModelCompiler.hpp"
+#include "ExecutableModel.hpp"
 
 /* Just for convenience */
 #define PRE_EXIT_FREE                                         \
@@ -49,7 +51,7 @@ void signalHandler(int s)
 	exit(1);
 }
 
-static int runSimulation(struct Simulation* simulation);
+static int runSimulation(struct Simulation* simulation, ExecutableModel* em);
 
 static void printVersion()
 {
@@ -222,11 +224,21 @@ int main(int argc, char* argv[])
 	{
 		if (simulationIsValidDescription(simulation))
 		{
+			// create the LLVM/Clang model compiler
+			ModelCompiler mc(argv[0], quietSet() == 0, generateDebugCode == 1);
+			// and the executable model
+			ExecutableModel em;
+			if (em.initialise(&mc, cellmlCode->codeFileName()) != 0)
+			{
+				ERROR("main", "Unable to create the executable model from '%s'\n",
+						cellmlCode->codeFileName());
+				return -1;
+			}
 			char* simulationName = simulationGetID(simulation);
 			MESSAGE("Running the simulation: %s\n", simulationName);
 			//simulationPrint(simulation, stdout, "###");
 			DEBUG(0, "main", "Running the simulation: %s\n", simulationName);
-			if (runSimulation(simulation) == OK)
+			if (runSimulation(simulation, &em) == OK)
 			{
 				DEBUG(
 						0,
@@ -264,10 +276,10 @@ int main(int argc, char* argv[])
 	return (0);
 }
 
-static int runSimulation(struct Simulation* simulation)
+static int runSimulation(struct Simulation* simulation, ExecutableModel* em)
 {
 	int code = ERR;
-	if (simulation && simulationIsValidDescription(simulation))
+	if (em && simulation && simulationIsValidDescription(simulation))
 	{
 #if 0
 		struct IntegratorUserData* userData = CreateIntegratorUserDataForSimulation(

@@ -19,6 +19,11 @@ public:
 
 	int createCodeForSimulation(struct Simulation* simulation, bool generateDebugCode = false);
 
+	const char* const codeFileName()
+	{
+		return mCodeFileName.c_str();
+	}
+
 private:
 
 	bool mSaveGeneratedCode;
