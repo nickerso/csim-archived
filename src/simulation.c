@@ -8,7 +8,6 @@
 #include "utils.h"
 #include "timer.h"
 #include "simulation.h"
-#include "cellml_code_manager.h"
 #include "outputVariables.h"
 
 #define INVALID_MM_STRING "invalid Multistep Method"

@@ -139,15 +139,15 @@ SET(CSim_SRCS
   src/timer.c
   src/cellml.cpp
   src/cellml-utils.cpp
-  src/cellml_code_manager.c
+  src/CellmlCode.cpp
   src/cellml_methods.c
   src/integrator.c
   src/ccgs_required_functions.cpp
-  src/integrator_user_data.c
+  #src/integrator_user_data.c
   src/simulation.c
   src/xpath.c
   src/outputVariables.cpp
-  src/csim.c
+  src/csim.cpp
 )
 
 # Special treatment for generating and compiling version.c

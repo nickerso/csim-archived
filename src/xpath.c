@@ -47,6 +47,8 @@ struct Simulation* getSimulation(const char* uri)
 	simulationSetModelURI(simulation, uri);
 	simulationSetBvarURI(simulation, "bob");
 
+	// TODO: need to get algorithm and parameters...
+
 	char* value = getTextContent(doc, BAD_CAST "//csim:simulation/@id");
 	if (value)
 	{

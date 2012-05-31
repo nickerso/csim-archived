@@ -7,36 +7,39 @@
 #include <unistd.h>
 #include <time.h>
 #include <signal.h>
+#include <string>
 
+extern "C"
+{
 #include "version.h"
 #include "common.h"
 #include "utils.h"
 #include "cellml.h"
-#include "cellml_code_manager.h"
 #include "simulation.h"
 #include "timer.h"
 #include "integrator_user_data.h"
 #include "integrator.h"
 #include "xpath.h"
+}
+#include "CellmlCode.hpp"
 
 /* Just for convenience */
 #define PRE_EXIT_FREE                                         \
-		if (inputURI) free(inputURI);                               \
-		if (cCompiler) free(cCompiler);                             \
+		if (inputURI) free(inputURI);                         \
 		if (simulation) DestroySimulation(&simulation);       \
-		if (codeManager) DestroyCellMLCodeManager(&codeManager);    \
+		if (cellmlCode) delete cellmlCode;
 /* and for use when program is interrupted */
 struct SignalHandlerData
 {
-	struct CellMLCodeManager* codeManager;
+	CellmlCode* code;
 	void (*handler)(int);
 };
 static struct SignalHandlerData signalData;
 /* make sure we tidy up created files */
 void signalHandler(int s)
 {
-	if (signalData.codeManager)
-		DestroyCellMLCodeManager(&(signalData.codeManager));
+	if (signalData.code)
+		delete signalData.code;
 	ERROR("signalHandler", "Caught an interrupt signal. Exiting...\n");
 	if (signalData.handler)
 	{
@@ -46,15 +49,14 @@ void signalHandler(int s)
 	exit(1);
 }
 
-static int runSimulation(struct Simulation* simulation,
-		struct CellMLCodeManager* codeManager);
+static int runSimulation(struct Simulation* simulation);
 
 static void printVersion()
 {
 	char* version = getVersion((char*) NULL, (char*) NULL);
 	printf("%s\n", version);
 	printf(
-			"Copyright (C) 2007-2008 David Nickerson.\n"
+			"Copyright (C) 2007-2012 David Nickerson.\n"
 					"This is free software; see the source for copying conditions. There \n"
 					"is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A \n"
 					"PARTICULAR PURPOSE.\n");
@@ -75,8 +77,6 @@ static void usage(char* prog)
 					"\tSave the temporary files generated from CellML.\n"
 					"  --debug\n"
 					"\tMainly for development, more occurrences more output.\n"
-					"  --CC\n"
-					"\tDefine the C compiler (default: 'gcc -fPIC -O3 -shared -x c -o')\n"
 					"  --generate-debug-code\n"
 					"\tGenerate code with debug bits included, useful for finding errors in "
 					"models.\n"
@@ -90,12 +90,15 @@ static void help(char* prog)
 	const char const * sundials_version = getSundialsVersion();
 	printf("Useful links:\n"
 			"http://cellml.sourceforge.net\n"
+			"http://code.google.com/p/cellml-simulator/\n"
 			"http://www.cellml.org\n"
 			"http://www.cellml.org/specifications\n"
 			"\n"
 			"%s uses:\n"
-			"- The CellML API (version 1.6)\n"
+			"- The CellML API (version 1.11)\n"
 			"  http://www.cellml.org\n"
+			"- LLVM/Clang (version TODO)\n"
+			"  http://www.llvm.org\n"
 			"- The CVODES integrator from sundials (version %s)\n"
 			"  http://www.llnl.gov/CASC/sundials/\n", prog, sundials_version);
 	printf("\n");
@@ -110,14 +113,11 @@ int main(int argc, char* argv[])
 {
 	char* inputURI = (char*) NULL;
 	struct Simulation* simulation = (struct Simulation*) NULL;
-	struct CellMLCodeManager* codeManager = (struct CellMLCodeManager*) NULL;
-	signalData.codeManager = (struct CellMLCodeManager*) NULL;
-	/* default values */
-	char* cCompiler = strcopy("gcc -fPIC -O3 -shared -x c -o");
+	CellmlCode* cellmlCode = NULL;
+	signalData.code = NULL;
 
 	/* Parse command line arguments */
 	int c, invalidargs = 0;
-	extern int PauseForCodeChanges;
 	static int helpRequest = 0;
 	static int versionRequest = 0;
 	static int saveTempFiles = 0;
@@ -130,10 +130,8 @@ int main(int argc, char* argv[])
 		{ "version", no_argument, &versionRequest, 1 },
 		{ "save-temp-files", no_argument, &saveTempFiles, 1 },
 		{ "generate-debug-code", no_argument, &generateDebugCode, 1 },
-		{ "pause-for-changes", no_argument, &PauseForCodeChanges, 1 },
 		{ "quiet", no_argument, NULL, 13 },
 		{ "debug", no_argument, NULL, 14 },
-		{ "CC", required_argument, NULL, 17 },
 		{ 0, 0, 0, 0 } };
 		int option_index;
 		c = getopt_long(argc, argv, "", long_options, &option_index);
@@ -161,13 +159,6 @@ int main(int argc, char* argv[])
 		{
 			/* debug level, the more times the more debug output */
 			setDebugLevel();
-		}
-			break;
-		case 17:
-		{
-			if (cCompiler)
-				free(cCompiler);
-			cCompiler = strcopy(optarg);
 		}
 			break;
 		case '?':
@@ -215,16 +206,15 @@ int main(int argc, char* argv[])
 		return (1);
 	}
 
-	/* Create the CellML Code Manager */
-	codeManager = CreateCellMLCodeManager(saveTempFiles, cCompiler,
-			generateDebugCode);
-	signalData.codeManager = codeManager;
+	/* Create the CellML Code */
+	cellmlCode = new CellmlCode(generateDebugCode);
+	signalData.code = cellmlCode;
 
 	/* set up the signal handler to ensure we clean up temporary files when
 	 interrupt signal is received, and save any existing handler? */
 	signalData.handler = signal(SIGINT, &signalHandler);
 
-	/* no graphs, so just look for simulations */
+	/* look for a single simulation */
 	simulation = getSimulation(inputURI);
 
 	int code = OK;
@@ -236,7 +226,7 @@ int main(int argc, char* argv[])
 			MESSAGE("Running the simulation: %s\n", simulationName);
 			//simulationPrint(simulation, stdout, "###");
 			DEBUG(0, "main", "Running the simulation: %s\n", simulationName);
-			if (runSimulation(simulation, codeManager) == OK)
+			if (runSimulation(simulation) == OK)
 			{
 				DEBUG(
 						0,
@@ -274,12 +264,12 @@ int main(int argc, char* argv[])
 	return (0);
 }
 
-static int runSimulation(struct Simulation* simulation,
-		struct CellMLCodeManager* codeManager)
+static int runSimulation(struct Simulation* simulation)
 {
 	int code = ERR;
 	if (simulation && simulationIsValidDescription(simulation))
 	{
+#if 0
 		struct IntegratorUserData* userData = CreateIntegratorUserDataForSimulation(
 				codeManager, simulation);
 		if (userData)
@@ -395,6 +385,7 @@ static int runSimulation(struct Simulation* simulation,
 		else
 			ERROR("runSimulation", "Error getting the user data for the "
 			"model:\n");
+#endif
 	}
 	else DEBUG(0, "runSimulation", "Invalid arguments\n");
 	return (code);
