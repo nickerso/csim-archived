@@ -754,8 +754,8 @@ writeCode(iface::cellml_services::CodeInformation* cci,
   // checkCodeInformation function.
   std::wstring code;
   // The required headers
-  code += L"#include <math.h>\n";
-  code += L"#include <stdio.h>\n";
+  //code += L"#include <math.h>\n";
+  //code += L"#include <stdio.h>\n";
   /* required functions */
   code += L"extern double fabs(double x);";
   code += L"extern double acos(double x);";

@@ -8,6 +8,7 @@
 #include <time.h>
 #include <signal.h>
 #include <string>
+#include <iostream>
 
 extern "C"
 {
@@ -209,7 +210,7 @@ int main(int argc, char* argv[])
 	}
 
 	/* Create the CellML Code */
-	cellmlCode = new CellmlCode(generateDebugCode);
+	cellmlCode = new CellmlCode(saveTempFiles == 1);
 	signalData.code = cellmlCode;
 
 	/* set up the signal handler to ensure we clean up temporary files when
@@ -224,6 +225,8 @@ int main(int argc, char* argv[])
 	{
 		if (simulationIsValidDescription(simulation))
 		{
+			// create the code from the cellml model
+			cellmlCode->createCodeForSimulation(simulation, generateDebugCode == 1);
 			// create the LLVM/Clang model compiler
 			ModelCompiler mc(argv[0], quietSet() == 0, generateDebugCode == 1);
 			// and the executable model
@@ -232,6 +235,7 @@ int main(int argc, char* argv[])
 			{
 				ERROR("main", "Unable to create the executable model from '%s'\n",
 						cellmlCode->codeFileName());
+				PRE_EXIT_FREE;
 				return -1;
 			}
 			char* simulationName = simulationGetID(simulation);

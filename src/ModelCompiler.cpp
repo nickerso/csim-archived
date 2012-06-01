@@ -82,6 +82,8 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
     std::cout << "filename = '" << filename << "'" << std::endl;
     Args.push_back(mExecutable.c_str());
 	Args.push_back("-fsyntax-only");
+	Args.push_back("-x");
+	Args.push_back("c");
 	if (mDebug) Args.push_back("-g");
 	else Args.push_back("-O3");
 	if (mVerbose) Args.push_back("-v");

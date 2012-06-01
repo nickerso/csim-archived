@@ -109,10 +109,12 @@ int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename)
 	gv = mEE->runFunction(getNoutputs, noargs);
 	nOutputs = gv.IntVal.getLimitedValue();
 
+	/*
     llvm::Function* mult = compiledModel->getFunction("mult");
     std::vector<llvm::GenericValue> oneargs(1);
     oneargs[0].PointerVal = &nBound;
     gv = mEE->runFunction(mult, oneargs);
+    */
 
     std::cout << "nBound = " << nBound << std::endl;
     std::cout << "nConstants = " << nConstants << std::endl;
