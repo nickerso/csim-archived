@@ -14,14 +14,17 @@
 #include <cvodes/cvodes_sptfqmr.h> /* prototypes & consts. for CVSPTFQMR solver */
 #include <sundials/sundials_dense.h> /* definitions DenseMat and DENSE_ELEM */
 
+extern "C"
+{
 #include "common.h"
 #include "utils.h"
-#include "integrator.h"
 #include "simulation.h"
-#include "integrator_user_data.h"
 #include "cellml_methods.h"
-
 #include "ccgs_required_functions.h"
+}
+
+#include "integrator.hpp"
+#include "ExecutableModel.hpp"
 
 /* FIXME: Temporary? */
 #ifndef SUNDIALS_DOUBLE_PRECISION
@@ -34,21 +37,23 @@ struct Integrator
   N_Vector y;
   void* cvode_mem;
   struct Simulation* simulation;
+  // FIXME: really need to handle this properly, but for now simply grabbing a handle.
+  ExecutableModel* em;
 };
 
 /* Function called by the Solver (CVODES only) */
 static int f(realtype t,N_Vector y,N_Vector ydot,void *f_data);
 
-static int check_flag(void *flagvalue,char *funcname,int opt);
+static int check_flag(void *flagvalue,const char *funcname,int opt);
 
 /*
  * Functions to use CVODES
  *
  */
 struct Integrator* CreateIntegrator(struct Simulation* sim,
-  struct IntegratorUserData* ud)
+		class ExecutableModel* em)
 {
-  if (!(sim && ud && ud->methods))
+  if (!(sim && em))
   {
     ERROR("CreateIntegrator","Invalid arguments when creating integrator");
     return((struct Integrator*)NULL);
@@ -59,6 +64,8 @@ struct Integrator* CreateIntegrator(struct Simulation* sim,
   integrator->y = NULL;
   integrator->cvode_mem = NULL;
   integrator->simulation = simulationClone(sim);
+  // FIXME: really need to handle this properly, but for now simply grabbing a handle.
+  integrator->em = em;
 
   /* Check for errors in the simulation */
   if (simulationGetATolLength(integrator->simulation) < 1)
@@ -91,7 +98,7 @@ struct Integrator* CreateIntegrator(struct Simulation* sim,
   }
 
   /* Create serial vector of length NR for I.C. */
-  integrator->y = N_VNew_Serial(ud->NR);
+  integrator->y = N_VNew_Serial(em->nRates);
   if (check_flag((void *)(integrator->y),"N_VNew_Serial",0))
   {
     DestroyIntegrator(&integrator);
@@ -100,7 +107,7 @@ struct Integrator* CreateIntegrator(struct Simulation* sim,
   /* Initialize y */
   realtype* yD = NV_DATA_S(integrator->y);
   int i;
-  for (i=0;i<(ud->NR);i++) yD[i] = (realtype)(ud->STATES[i]);
+  for (i=0;i<(em->nRates);i++) yD[i] = (realtype)(em->states[i]);
 
   /* adjust parameters accordingly */
   switch (simulationGetMultistepMethod(integrator->simulation))
@@ -198,7 +205,7 @@ struct Integrator* CreateIntegrator(struct Simulation* sim,
       case DENSE:
       {
         /* Call CVDense to specify the CVDENSE dense linear solver */
-        flag = CVDense(integrator->cvode_mem,ud->NR);
+        flag = CVDense(integrator->cvode_mem,em->nRates);
         if (check_flag(&flag,"CVDense",1))
         {
           DestroyIntegrator(&integrator);
@@ -208,10 +215,10 @@ struct Integrator* CreateIntegrator(struct Simulation* sim,
       case BAND:
       {
         /* Call CVBand to specify the CVBAND linear solver */
-        long int upperBW = ud->NR - 1; /* FIXME: This probably doesn't make */
-        long int lowerBW = ud->NR - 1; /* any sense, but should do until I */
-                                       /* fix it */
-        flag = CVBand(integrator->cvode_mem,ud->NR,upperBW,lowerBW);
+        long int upperBW = em->nRates - 1; /* FIXME: This probably doesn't make */
+        long int lowerBW = em->nRates - 1; /* any sense, but should do until I */
+                                           /* fix it */
+        flag = CVBand(integrator->cvode_mem,em->nRates,upperBW,lowerBW);
         if (check_flag(&flag,"CVBand",1))
         {
           DestroyIntegrator(&integrator);
@@ -275,8 +282,9 @@ struct Integrator* CreateIntegrator(struct Simulation* sim,
     }
   }
 
-  /* Pass through fData to f */
-  flag = CVodeSetUserData(integrator->cvode_mem,(void*)(ud));
+  /* Pass through the executable model to f */
+  // FIXME: really need to handle this properly, but for now simply grabbing a handle.
+  flag = CVodeSetUserData(integrator->cvode_mem,(void*)(em));
   if (check_flag(&flag,"CVodeSetUserData",1))
   {
     DestroyIntegrator(&integrator);
@@ -346,24 +354,22 @@ int DestroyIntegrator(struct Integrator** integrator)
   return(OK);
 }
 
-int integratorInitialise(struct Integrator* integrator,
-  struct IntegratorUserData* ud)
+int integratorInitialise(struct Integrator* integrator)
 {
   int i,code = ERR;
-  if (integrator && ud)
+  if (integrator)
   {
     /* Initialize y */
     realtype* yD = NV_DATA_S(integrator->y);
-    for (i=0;i<(ud->NR);i++) yD[i] = (realtype)(ud->STATES[i]);
+    for (i=0;i<(integrator->em->nRates);i++) yD[i] = (realtype)(integrator->em->states[i]);
     code = OK;
   }
   return(code);
 }
 
-int integrate(struct Integrator* integrator,struct IntegratorUserData* ud,
-  double tout,double* t)
+int integrate(struct Integrator* integrator, double tout, double* t)
 {
-  if (ud->NR > 0)
+  if (integrator->em->nRates > 0)
   {
     /* need to integrate if we have any differential equations */
     int flag;
@@ -375,18 +381,14 @@ int integrate(struct Integrator* integrator,struct IntegratorUserData* ud,
     if (check_flag(&flag,"CVode",1)) return(ERR);
     /* we also need to evaluate all the other variables that are not required
        to be updated during integration */
-    ud->methods->EvaluateVariables(tout,ud->CONSTANTS,ud->RATES,
-      ud->STATES,ud->ALGEBRAIC);
+    integrator->em->evaluateVariables(tout);
   }
   else
   {
+	/* no differential equations so just evaluate once */
+	integrator->em->computeRates(tout);
+	integrator->em->evaluateVariables(tout);
     *t = tout;
-    ud->BOUND[0] = *t;
-    /* no differential equations so just evaluate once */
-    ud->methods->ComputeRates(*(ud->BOUND),ud->STATES,ud->RATES,ud->CONSTANTS,
-      ud->ALGEBRAIC);
-    ud->methods->EvaluateVariables(*(ud->BOUND),ud->CONSTANTS,ud->RATES,
-      ud->STATES,ud->ALGEBRAIC);
   }
 
   /*
@@ -401,7 +403,7 @@ int integrate(struct Integrator* integrator,struct IntegratorUserData* ud,
 #endif
   
   /* Make sure the outputs are up-to-date */
-  ud->methods->GetOutputs(*(ud->BOUND), ud->CONSTANTS, ud->STATES, ud->ALGEBRAIC, ud->OUTPUTS);
+  integrator->em->getOutputs(*t);
   return(OK);
 }
 
@@ -417,18 +419,17 @@ int integrate(struct Integrator* integrator,struct IntegratorUserData* ud,
 
 static int f(realtype t,N_Vector y,N_Vector ydot,void *f_data)
 {
-  struct IntegratorUserData* ud = (struct IntegratorUserData*)f_data;
+  ExecutableModel* em = (ExecutableModel*)f_data;
   realtype* yD = NV_DATA_S(y);
   realtype* ydotD = NV_DATA_S(ydot);
   long int len = NV_LENGTH_S(y);
   long int i;
 
-  ud->BOUND[0] = (double)t;
-  for (i=0;i<len;i++) ud->STATES[i]=(double)yD[i];
+  for (i=0;i<len;i++) em->states[i]=(double)yD[i];
   /* while integrating we only need to compute the rates */
-  ud->methods->ComputeRates(*(ud->BOUND),ud->STATES,ud->RATES,ud->CONSTANTS,
-    ud->ALGEBRAIC);
-  for (i=0;i<len;i++) ydotD[i] = (realtype)(ud->RATES[i]);
+  em->computeRates(t);
+  for (i=0;i<len;i++) ydotD[i] = (realtype)(em->rates[i]);
+
   return(0);
 }
 
@@ -443,7 +444,7 @@ static int f(realtype t,N_Vector y,N_Vector ydot,void *f_data)
  *
  * FIXME: non-standard error code used, should change?
  */
-static int check_flag(void *flagvalue, char *funcname, int opt)
+static int check_flag(void *flagvalue, const char *funcname, int opt)
 {
   int *errflag;
 
@@ -577,6 +578,7 @@ void PrintFinalStats(struct Integrator* integrator)
         lenrwLS = -1;
         leniwLS = -1;
       }
+      break;
     }
     printf(" Linear solver real workspace length      = %4ld \n", lenrwLS);
     printf(" Linear solver integer workspace length   = %4ld \n", leniwLS);

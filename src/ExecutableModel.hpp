@@ -15,6 +15,7 @@ namespace llvm
 	class Function;
 	class ExecutionEngine;
 }
+class ModelCompiler;
 
 class ExecutableModel
 {

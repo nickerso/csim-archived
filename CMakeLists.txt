@@ -142,9 +142,8 @@ SET(CSim_SRCS
   src/cellml-utils.cpp
   src/CellmlCode.cpp
   src/cellml_methods.c
-  src/integrator.c
+  src/integrator.cpp
   src/ccgs_required_functions.cpp
-  #src/integrator_user_data.c
   src/simulation.c
   src/xpath.c
   src/outputVariables.cpp

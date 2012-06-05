@@ -18,10 +18,10 @@ extern "C"
 #include "cellml.h"
 #include "simulation.h"
 #include "timer.h"
-#include "integrator_user_data.h"
-#include "integrator.h"
 #include "xpath.h"
 }
+
+#include "integrator.hpp"
 #include "CellmlCode.hpp"
 #include "ModelCompiler.hpp"
 #include "ExecutableModel.hpp"
@@ -285,123 +285,107 @@ static int runSimulation(struct Simulation* simulation, ExecutableModel* em)
 	int code = ERR;
 	if (em && simulation && simulationIsValidDescription(simulation))
 	{
-#if 0
-		struct IntegratorUserData* userData = CreateIntegratorUserDataForSimulation(
-				codeManager, simulation);
-		if (userData)
+		struct Integrator* integrator = CreateIntegrator(simulation, em);
+		if (integrator)
 		{
-			DEBUG(0, "runSimulation",
-					"Got the user data for the model:\n");
-			integratorUserDataInitialise(userData,
-					simulationGetBvarStart(simulation));
-			struct Integrator* integrator = CreateIntegrator(simulation,
-					userData);
-			if (integrator)
+			DEBUG(0, "runSimulation", "Initialised the simulation data\n");
+			double tStart = simulationGetBvarStart(simulation);
+			double tEnd = simulationGetBvarEnd(simulation);
+			double tabT = simulationGetBvarTabStep(simulation);
+			int iout = 0;
+			double tout = tStart + tabT;
+			if (tout > tEnd)
+				tout = tEnd;
+			struct Timer* timer = CreateTimer();
+			startTimer(timer);
+			double integrationTimes[3] =
+			{ 0.0, 0.0, 0.0 };
+			double dataStoreTimes[3] =
+			{ 0.0, 0.0, 0.0 };
+			int i;
+			for (i = 0; i < em->nOutputs; i++)
+				printf("\t%15.10e", em->outputs[i]);
+			printf("\n");
+			while (1)
 			{
-				DEBUG(0, "runSimulation", "Initialised the simulation data\n");
-				double tStart = simulationGetBvarStart(simulation);
-				double tEnd = simulationGetBvarEnd(simulation);
-				double tabT = simulationGetBvarTabStep(simulation);
-				int iout = 0;
-				double tout = tStart + tabT;
-				if (tout > tEnd)
-					tout = tEnd;
-				struct Timer* timer = CreateTimer();
-				startTimer(timer);
-				double integrationTimes[3] =
-				{ 0.0, 0.0, 0.0 };
-				double dataStoreTimes[3] =
-				{ 0.0, 0.0, 0.0 };
-				int i;
-				for (i = 0; i < userData->NO; i++)
-					printf("\t%15.10e", userData->OUTPUTS[i]);
-				printf("\n");
-				while (1)
+				DEBUG(5, "runSimulation", "tout = "REAL_FORMAT"\n", tout);
+				double t;
+				iout++;
+				TIME_FUNCTION_CALL(integrationTimes, intTimer, code,
+						integrate, integrator, tout, &t);
+				if (code == OK)
 				{
-					DEBUG(5, "runSimulation", "tout = "REAL_FORMAT"\n", tout);
-					double t;
-					iout++;
-					TIME_FUNCTION_CALL(integrationTimes, intTimer, code,
-							integrate, integrator, userData, tout, &t);
+					int i;
+					for (i = 0; i < em->nOutputs; i++)
+						printf("\t%15.10e", em->outputs[i]);
+					printf("\n");
 					if (code == OK)
 					{
-						int i;
-						for (i = 0; i < userData->NO; i++)
-							printf("\t%15.10e", userData->OUTPUTS[i]);
-						printf("\n");
-						if (code == OK)
-						{
-							/* have we reached tEnd? */
-							if (fabs(tEnd - t) < ZERO_TOL)
-								break;
-							/* if not, increase tout */
-							tout += tabT;
-							/* and make sure we don't go past tEnd */
-							if (tout > tEnd)
-								tout = tEnd;
-						}
-						else
-						{
-							DEBUG(0, "runSimulation",
-									"Error appending integration results "
-									"at time: "REAL_FORMAT"\n", tout);
+						/* have we reached tEnd? */
+						if (fabs(tEnd - t) < ZERO_TOL)
 							break;
-						}
+						/* if not, increase tout */
+						tout += tabT;
+						/* and make sure we don't go past tEnd */
+						if (tout > tEnd)
+							tout = tEnd;
 					}
 					else
 					{
-						DEBUG(
-								0,
-								"runSimulation",
-								"Error integrating at time: "REAL_FORMAT"\n", tout);
+						DEBUG(0, "runSimulation",
+								"Error appending integration results "
+								"at time: "REAL_FORMAT"\n", tout);
 						break;
 					}
 				}
-				stopTimer(timer);
-				double user = getUserTime(timer);
-				double system = getSystemTime(timer);
-				double total = user + system;
-				double wall = getWallTime(timer);
-				DestroyTimer(&timer);
-				MESSAGE("  Wall clock time : "REAL_FORMAT" s\n", wall);
-				MESSAGE(
-						"    (integration "REAL_FORMAT" s)\n", integrationTimes[2]);
-				MESSAGE(
-						"    (data store  "REAL_FORMAT" s)\n", dataStoreTimes[2]);
-				MESSAGE(
-						"  CPU time        : "REAL_FORMAT" s "
-						"(user "REAL_FORMAT"/system "REAL_FORMAT")\n", total, user, system);
-				MESSAGE(
-						"    (integration "REAL_FORMAT" s)\n", integrationTimes[0]+integrationTimes[1]);
-				MESSAGE(
-						"    (data store  "REAL_FORMAT" s)\n", dataStoreTimes[0]+dataStoreTimes[1]);
-				if (!quietSet())
-				{
-					printMemoryStats();
-					/* Print some final statistics from the integrator */
-					PrintFinalStats(integrator);
-				}
-				if (code == OK)
-				{
-					DEBUG(2, "runSimulation", "Simulation complete\n");
-					//simulationFlagResultsComplete(simulation,1);
-				}
 				else
 				{
-					DEBUG(0, "runSimulation", "Something went wrong with the "
-					"integration so flagging partial results\n");
-					//simulationFlagResultsComplete(simulation,0);
+					DEBUG(
+							0,
+							"runSimulation",
+							"Error integrating at time: "REAL_FORMAT"\n", tout);
+					break;
 				}
-				DestroyIntegrator(&integrator);
+			}
+			stopTimer(timer);
+			double user = getUserTime(timer);
+			double system = getSystemTime(timer);
+			double total = user + system;
+			double wall = getWallTime(timer);
+			DestroyTimer(&timer);
+			MESSAGE("  Wall clock time : "REAL_FORMAT" s\n", wall);
+			MESSAGE(
+					"    (integration "REAL_FORMAT" s)\n", integrationTimes[2]);
+			MESSAGE(
+					"    (data store  "REAL_FORMAT" s)\n", dataStoreTimes[2]);
+			MESSAGE(
+					"  CPU time        : "REAL_FORMAT" s "
+					"(user "REAL_FORMAT"/system "REAL_FORMAT")\n", total, user, system);
+			MESSAGE(
+					"    (integration "REAL_FORMAT" s)\n", integrationTimes[0]+integrationTimes[1]);
+			MESSAGE(
+					"    (data store  "REAL_FORMAT" s)\n", dataStoreTimes[0]+dataStoreTimes[1]);
+			if (!quietSet())
+			{
+				printMemoryStats();
+				/* Print some final statistics from the integrator */
+				PrintFinalStats(integrator);
+			}
+			if (code == OK)
+			{
+				DEBUG(2, "runSimulation", "Simulation complete\n");
+				//simulationFlagResultsComplete(simulation,1);
 			}
 			else
-				ERROR("runSimulation", "Error creating integrator\n");
-			DestroyIntegratorUserData(&userData);
+			{
+				DEBUG(0, "runSimulation", "Something went wrong with the "
+				"integration so flagging partial results\n");
+				//simulationFlagResultsComplete(simulation,0);
+			}
+			DestroyIntegrator(&integrator);
 		}
 		else
-			ERROR("runSimulation", "Error getting the user data for the "
-			"model:\n");
-#endif
+			ERROR("runSimulation", "Error creating integrator\n");
 	}
 	else DEBUG(0, "runSimulation", "Invalid arguments\n");
 	return (code);
