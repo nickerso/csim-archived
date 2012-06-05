@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
 			ModelCompiler mc(argv[0], quietSet() == 0, generateDebugCode == 1);
 			// and the executable model
 			ExecutableModel em;
-			if (em.initialise(&mc, cellmlCode->codeFileName()) != 0)
+			if (em.initialise(&mc, cellmlCode->codeFileName(), simulationGetBvarStart(simulation)) != 0)
 			{
 				ERROR("main", "Unable to create the executable model from '%s'\n",
 						cellmlCode->codeFileName());

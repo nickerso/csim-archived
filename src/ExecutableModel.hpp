@@ -25,7 +25,7 @@ public:
 
     /* Initialise the executable model for the given compiler and file.
       */
-    int initialise(ModelCompiler* compiler, const char* filename);
+    int initialise(ModelCompiler* compiler, const char* filename, double voiInitialValue);
 
 	/* Set up the output array ready for writing.
 	 */

@@ -36,6 +36,11 @@
 using namespace clang;
 using namespace clang::driver;
 
+extern "C"
+{
+#include "utils.h"
+}
+
 #include "ModelCompiler.hpp"
 
 #include "ExecutableModel.hpp"
@@ -45,7 +50,7 @@ ExecutableModel::ExecutableModel() :
 {
 }
 
-int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename)
+int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename, double voiInitialValue)
 {
     if (!compiler)
     {
@@ -116,11 +121,14 @@ int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename)
     gv = mEE->runFunction(mult, oneargs);
     */
 
-    std::cout << "nBound = " << nBound << std::endl;
-    std::cout << "nConstants = " << nConstants << std::endl;
-    std::cout << "nRates = " << nRates << std::endl;
-    std::cout << "nAlgebraic = " << nAlgebraic << std::endl;
-    std::cout << "nOutputs = " << nOutputs << std::endl;
+	if (debugLevel() > 0)
+	{
+		std::cout << "nBound = " << nBound << std::endl;
+		std::cout << "nConstants = " << nConstants << std::endl;
+		std::cout << "nRates = " << nRates << std::endl;
+		std::cout << "nAlgebraic = " << nAlgebraic << std::endl;
+		std::cout << "nOutputs = " << nOutputs << std::endl;
+	}
 
 	bound = (double*) calloc(nBound, sizeof(double));
 	constants = (double*) calloc(nConstants, sizeof(double));
@@ -128,6 +136,12 @@ int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename)
 	states = (double*) calloc(nRates, sizeof(double));
 	algebraic = (double*) calloc(nAlgebraic, sizeof(double));
 	outputs = (double*) calloc(nOutputs, sizeof(double));
+
+	// intialise the arrays
+	setupFixedConstants();
+	computeRates(voiInitialValue);
+    evaluateVariables(voiInitialValue);
+    getOutputs(voiInitialValue);
     return 0;
 }
 
@@ -174,22 +188,20 @@ int ExecutableModel::computeRates(double voi)
 
 int ExecutableModel::evaluateVariables(double voi)
 {
-    double *dp = new double(voi);
     std::vector<llvm::GenericValue> args(5);
     args[0].DoubleVal = voi;
     args[1].PointerVal = constants;
     args[2].PointerVal = rates;
     args[3].PointerVal = states;
     args[4].PointerVal = algebraic;
-    mEE->runFunction(mEvaluateVariables, args);
-    delete dp;
+    llvm::GenericValue gv = mEE->runFunction(mEvaluateVariables, args);
 	return 0;
 }
 
 int ExecutableModel::getOutputs(double voi)
 {
     std::vector<llvm::GenericValue> args(5);
-    args[0].PointerVal = (void*)(&voi);
+    args[0].DoubleVal = voi;
 	args[1].PointerVal = (void*)constants;
 	args[2].PointerVal = (void*)states;
 	args[3].PointerVal = (void*)algebraic;

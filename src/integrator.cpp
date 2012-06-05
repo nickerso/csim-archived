@@ -1,4 +1,4 @@
-
+#include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -356,12 +356,15 @@ int DestroyIntegrator(struct Integrator** integrator)
 
 int integratorInitialise(struct Integrator* integrator)
 {
-  int i,code = ERR;
+  int code = ERR;
   if (integrator)
   {
+#if 0
+	int i;
     /* Initialize y */
     realtype* yD = NV_DATA_S(integrator->y);
     for (i=0;i<(integrator->em->nRates);i++) yD[i] = (realtype)(integrator->em->states[i]);
+#endif
     code = OK;
   }
   return(code);
@@ -381,7 +384,7 @@ int integrate(struct Integrator* integrator, double tout, double* t)
     if (check_flag(&flag,"CVode",1)) return(ERR);
     /* we also need to evaluate all the other variables that are not required
        to be updated during integration */
-    integrator->em->evaluateVariables(tout);
+    integrator->em->evaluateVariables(*t);
   }
   else
   {
