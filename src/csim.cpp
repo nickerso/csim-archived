@@ -90,7 +90,7 @@ static void help(char* prog)
 {
 	usage(prog);
 	printf("\n\n");
-	const char const * sundials_version = getSundialsVersion();
+	const char * sundials_version = getSundialsVersion();
 	printf("Useful links:\n"
 			"http://cellml.sourceforge.net\n"
 			"http://code.google.com/p/cellml-simulator/\n"

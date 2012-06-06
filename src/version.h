@@ -4,9 +4,9 @@
 
 char* getVersion(const char* tool,const char* toolVersion);
 
-const char const * getRedlandVersion();
-const char const * getPLplotVersion();
-const char const * getSundialsVersion();
-const char const * getHDF5Version();
+const char * getRedlandVersion();
+const char * getPLplotVersion();
+const char * getSundialsVersion();
+const char * getHDF5Version();
 
 #endif

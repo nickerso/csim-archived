@@ -5,6 +5,7 @@
  *      Author: dnic019
  */
 #include <string>
+#include <stdio.h>
 #include <unistd.h>
 #include <cstdlib>
 #include <iostream>
