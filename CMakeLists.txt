@@ -40,7 +40,9 @@ FIND_PACKAGE(ZLIB REQUIRED QUIET)
 ##
 
 # http://lists.cs.uiuc.edu/pipermail/llvmdev/2011-December/046505.html
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden")
+if(NOT WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden")
+endif()
 
 # the released versions of LLVM are not built using CMake so need to manually define stuff
 set(USE_LLVM_RELEASE TRUE)
@@ -87,10 +89,10 @@ add_definitions(${LLVM_DEFINITIONS})
 include_directories( ${LLVM_INCLUDE_DIRS} )
 link_directories( ${LLVM_LIBRARY_DIRS} )
 
-message("LLVM defs: ${LLVM_DEFINITIONS}")
-message("LLVM includes: ${LLVM_INCLUDE_DIRS}")
-message("LLVM lib dir: ${LLVM_LIBRARY_DIRS}")
-message("LLVM libs: ${REQ_LLVM_LIBRARIES}")
+#message("LLVM defs: ${LLVM_DEFINITIONS}")
+#message("LLVM includes: ${LLVM_INCLUDE_DIRS}")
+#message("LLVM lib dir: ${LLVM_LIBRARY_DIRS}")
+#message("LLVM libs: ${REQ_LLVM_LIBRARIES}")
 
 set(REQ_CLANG_LIBRARIES
     clangFrontend
@@ -111,9 +113,18 @@ set(REQ_CLANG_LIBRARIES
 )
 
 # Set compiler flags
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
-ADD_DEFINITIONS(-Wall -Werror
-  ${LIBXML2_DEFINITIONS}
+if (WIN32)
+    # need to treat all C files as C++ to avoid problems (http://stackoverflow.com/questions/2706453/what-is-the-cause-of-these-visual-studio-2010-errors-warnings)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /TP")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4290 /wd4091")
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+else(WIN32)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
+    add_definitions(-Wall -Werror)
+    set(PLATFORM_LIBS ${PLATFORM_LIBS} "lapack" "blas")
+endif(WIN32)
+ADD_DEFINITIONS(
+   ${LIBXML2_DEFINITIONS}
 )
 # Default to debug build type
 #SET(CMAKE_BUILD_TYPE Debug)
@@ -135,13 +146,10 @@ INCLUDE_DIRECTORIES(
 # Sources
 SET(CSim_SRCS
   src/utils.c
-  src/xml-utils.c
-  src/curl_file.c
   src/timer.c
   src/cellml.cpp
   src/cellml-utils.cpp
   src/CellmlCode.cpp
-  src/cellml_methods.c
   src/integrator.cpp
   src/ccgs_required_functions.cpp
   src/simulation.c
@@ -153,11 +161,21 @@ SET(CSim_SRCS
 )
 
 # Special treatment for generating and compiling version.c
-ADD_CUSTOM_COMMAND(
-  OUTPUT ${CMAKE_BINARY_DIR}/version.c
-  COMMAND ${CMAKE_SOURCE_DIR}/create-version.pl ${CMAKE_SOURCE_DIR}/version.c.in ${CMAKE_BINARY_DIR}/version.c ${CMAKE_SOURCE_DIR} ${CVODES_INCLUDE_DIR}
-  DEPENDS ${CMAKE_SOURCE_DIR}/create-version.pl ${CMAKE_SOURCE_DIR}/version.c.in ${CSim_SRCS}
-)
+## assume no perl on windows and simply copy the file over.
+## FIXME: need to migrate away from this perl script (and subversion)
+if(WIN32)
+    add_custom_command(
+      OUTPUT ${CMAKE_BINARY_DIR}/version.c
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/version.c.in ${CMAKE_BINARY_DIR}/version.c
+      DEPENDS ${CMAKE_SOURCE_DIR}/version.c.in ${CSim_SRCS}
+    )
+else(WIN32)
+    ADD_CUSTOM_COMMAND(
+      OUTPUT ${CMAKE_BINARY_DIR}/version.c
+      COMMAND ${CMAKE_SOURCE_DIR}/create-version.pl ${CMAKE_SOURCE_DIR}/version.c.in ${CMAKE_BINARY_DIR}/version.c ${CMAKE_SOURCE_DIR} ${CVODES_INCLUDE_DIR}
+      DEPENDS ${CMAKE_SOURCE_DIR}/create-version.pl ${CMAKE_SOURCE_DIR}/version.c.in ${CSim_SRCS}
+    )
+endif(WIN32)
 SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/version.c
   PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/src
 )
@@ -172,5 +190,6 @@ TARGET_LINK_LIBRARIES(csim
   ${LIBXML2_LIBRARIES}
   ${ZLIB_LIBRARIES}
   ${PLATFORM_LIBS}
-  -lcurl -ldl -llapack -lblas -lm)
+  -lm
+)
 

@@ -14,8 +14,13 @@ double getWallTime(struct Timer* t);
 
 void printMemoryStats();
 
+// FIXME: need to sort out timing for win32...
+
 /* A useful way to time a single function call? */
-#define TIME_FUNCTION_CALL(time_array,timer,return_value,function,...)  \
+#ifdef _MSC_VER
+#  define TIME_FUNCTION_CALL
+#else
+#  define TIME_FUNCTION_CALL(time_array,timer,return_value,function,...)  \
   struct Timer* timer = CreateTimer();                                  \
   startTimer(timer);                                                    \
   return_value = function(__VA_ARGS__);                                 \
@@ -24,5 +29,6 @@ void printMemoryStats();
   time_array[1] += getSystemTime(timer);                                \
   time_array[2] += getWallTime(timer);                                  \
   DestroyTimer(&timer)
+#endif
 
 #endif /* TIMING_H */

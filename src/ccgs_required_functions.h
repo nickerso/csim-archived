@@ -2,7 +2,11 @@
 #ifndef _CCGS_REQUIRED_FUNCTIONS_H_
 #define _CCGS_REQUIRED_FUNCTIONS_H_
 
-#include <inttypes.h>
+#ifdef _MSC_VER
+#  include <stdint.h>
+#else
+#  include <inttypes.h>
+#endif
 #include <stdarg.h>
 
 #ifdef __cplusplus

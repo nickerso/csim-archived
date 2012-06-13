@@ -60,8 +60,10 @@ extern "C"
 /*
  * Prototypes for local methods
  */
+#ifdef NOT_NEEDED
 static int updateVariableInitialValue(iface::cellml_api::Model* model,
   const char* variableURI,double value);
+#endif
 
 /*
  * Global methods
@@ -138,6 +140,7 @@ char* getCellMLMetadataAsRDFXMLString(const char* mbrurl)
   return(string);
 }
 
+#ifdef NOT_NEEDED
 int updateModelInitialValues(const char* inputURI,const char* outputFile,
   char** variables,double* values,int N)
 {
@@ -199,10 +202,12 @@ int updateModelInitialValues(const char* inputURI,const char* outputFile,
   else INVALID_ARGS("updateModelInitialValues");
   return(code);
 }
+#endif
 
 /*
  * Local methods
  */
+#ifdef NOT_NEEDED
 static int updateVariableInitialValue(iface::cellml_api::Model* model,
   const char* variableURI,double value)
 {
@@ -258,3 +263,4 @@ static int updateVariableInitialValue(iface::cellml_api::Model* model,
   else INVALID_ARGS("updateVariableInitialValue");
   return(code);
 }
+#endif

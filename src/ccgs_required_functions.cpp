@@ -4,6 +4,13 @@
 #include <math.h>
 #include <assert.h>
 
+#include <limits>
+
+#ifdef _MSC_VER
+#  include <float.h>
+#  define isfinite _finite
+#endif
+
 #include "ccgs_required_functions.h"
 
 /* functions all taken from CISSolve.cxx */
@@ -331,7 +338,7 @@ NR_MINIMISE
  double *x
 )
 {
-  double best_X = 0.0, best_fX = INFINITY;
+  double best_X = 0.0, best_fX = std::numeric_limits<double>::infinity();;
   double current_X, current_fX, current_dfX_dX;
   uint32_t steps, maxsteps;
   uint32_t i;

@@ -6,9 +6,17 @@
  */
 #include <string>
 #include <stdio.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <cstdlib>
 #include <iostream>
+
+#ifdef _MSC_VER
+#  include <io.h>
+#  include <fcntl.h>
+#  include <windows.h>
+#  define unlink _unlink
+#  define mkstemp win32_mkstemp
+#endif
 
 #include "CellmlCode.hpp"
 extern "C"
@@ -17,6 +25,26 @@ extern "C"
 #include "simulation.h"
 #include "cellml.h"
 }
+
+// from http://gitorious.org/git-win32/mainline/blobs/8cfc8e4414bbb568075a948562ebb357cb84b6c3/win32/mkstemp.c
+#ifdef _MSC_VER
+static int win32_mkstemp(char * t)
+{
+	DWORD pathSize;
+	char pathBuffer[1000];
+	char tempFilename[MAX_PATH];
+	UINT uniqueNum;
+	pathSize = GetTempPath( 1000, pathBuffer);
+	if (pathSize < 1000)
+		pathBuffer[pathSize] = 0;
+	else
+		pathBuffer[0] = 0;
+
+	uniqueNum = GetTempFileName(pathBuffer, "tmp", FILE_FLAG_DELETE_ON_CLOSE , tempFilename);
+	strcpy(t, tempFilename);
+	return _open(tempFilename, _O_RDWR|_O_BINARY);
+}
+#endif
 
 CellmlCode::CellmlCode() : mSaveGeneratedCode(false)
 {

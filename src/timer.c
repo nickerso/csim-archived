@@ -38,8 +38,12 @@
 /* Timing information -- using BSD timers since that is
    what CM uses */
 #include <sys/types.h>
+#ifdef _MSC_VER
+#include <time.h>
+#else
 #include <sys/time.h>
 #include <sys/resource.h>
+#endif
 // not working on mac os x
 #if 0
 #include <malloc.h>
@@ -55,6 +59,7 @@ struct Timer
   double wall[2];    /* Wall clock */
 };
 
+#ifndef _MSC_VER
 struct Timer* CreateTimer()
 {
   struct Timer* t = (struct Timer*)malloc(sizeof(struct Timer));
@@ -161,6 +166,7 @@ double getWallTime(struct Timer* t)
     return(-1);
   }
 }
+#endif // _MSC_VER
 
 void printMemoryStats()
 {

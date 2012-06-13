@@ -19,7 +19,6 @@ extern "C"
 #include "common.h"
 #include "utils.h"
 #include "simulation.h"
-#include "cellml_methods.h"
 #include "ccgs_required_functions.h"
 }
 

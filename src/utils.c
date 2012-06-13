@@ -1,10 +1,22 @@
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef _MSC_VER
+#include <direct.h>
+#else
 #include <unistd.h>
+#endif
 #include <stdarg.h>
 #include <stdio.h>
-#include <regex.h>
+//#include <regex.h>
+
+// FIXME: need to do this better?
+#ifdef _MSC_VER
+#  define PATH_MAX_SIZE 4096
+#  define getcwd _getcwd
+#else
+#  define PATH_MAX_SIZE pathconf(".",_PC_PATH_MAX)
+#endif
 
 #include "utils.h"
 
@@ -24,6 +36,7 @@ char* strcopy(const char* string)
   return(s);
 }
 
+#ifdef NOT_NEEDED
 /* from http://sources.redhat.com/autobook/autobook/autobook_74.html */
 char* trim(const char* string)
 {
@@ -46,6 +59,7 @@ char* trim(const char* string)
   }
   return result;
 }
+#endif
 
 /* concatenate variable number of strings and append to the <str> and
    return a pointer to the complete string */
@@ -98,7 +112,7 @@ char* getAbsoluteURI(const char* uri)
     {
       /* relative filename ? append absoulte path */
       /*printf("URI (%s) is relative path, making absolute URI: ",uri);*/
-      int size = pathconf(".",_PC_PATH_MAX);
+      int size = PATH_MAX_SIZE;
       char* cwd = (char*)malloc(size);
       if (!getcwd(cwd,size)) cwd[0] = '\0';
       char* abs = (char*)malloc(strlen(cwd)+strlen(uri)+1+8);
@@ -187,23 +201,26 @@ char* uriRemovePathSeparator(const char* uri)
   return(string);
 }
 
+#ifdef NOT_NEEDED
 /* grab the text following the last / in a given URI */
 char* getFilePart(const char* uri)
 {
   char* file = (char*)NULL;
   if (uri && (strlen(uri) > 0))
   {
-    char* s = strrchr(uri,'/');
+    const char* s = strrchr(uri,'/');
     if (++s) file = strcopy(s);
     else file = strcopy(uri);
   }
   else INVALID_ARGS("getFilePart");
   return(file);
 }
+#endif
 
 /* abbreviate a string by truncating it and adding ...
    if <front> is non-zero truncate the front of the string instead of the end.
  */
+#ifdef NOT_NEEDED
 char* abbreviateString(const char* string,int length,int front)
 {
   char* s = (char*)NULL;
@@ -231,8 +248,10 @@ char* abbreviateString(const char* string,int length,int front)
   else INVALID_ARGS("abbreviateString");
   return(s);
 }
+#endif
 
 /* return the file type based on the given mime type */
+#ifdef NOT_NEEDED
 enum FileType getFileType(const char* mime_type)
 {
   enum FileType type = UNKNOWN;
@@ -257,9 +276,11 @@ enum FileType getFileType(const char* mime_type)
   else INVALID_ARGS("getFileType");
   return(type);
 }
+#endif
 
 /* split the given <string> on the character <c> and return the number of
    strings found in <N>. Drop any trailing new line character */
+#ifdef NOT_NEEDED
 char** splitString(const char* string,char c,int* N)
 {
   char** s = (char**)NULL;
@@ -289,8 +310,10 @@ char** splitString(const char* string,char c,int* N)
   *N = n;
   return(s);
 }
+#endif
 
 /* Same as split, but return an array of doubles */
+#ifdef NOT_NEEDED
 double* splitRealNumbers(const char* string,char c,int* N)
 {
   char** numbers = splitString(string,c,N);
@@ -311,8 +334,10 @@ double* splitRealNumbers(const char* string,char c,int* N)
   free(numbers);
   return(n);
 }
+#endif
 
 /* Same as split, but return an array of ints */
+#ifdef NOT_NEEDED
 int* splitIntNumbers(const char* string,char c,int* N)
 {
   char** numbers = splitString(string,c,N);
@@ -333,7 +358,9 @@ int* splitIntNumbers(const char* string,char c,int* N)
   free(numbers);
   return(n);
 }
+#endif
 
+#ifdef NOT_NEEDED
 int regex_match(const char *string,char *pattern)
 {
   int status;
@@ -349,4 +376,4 @@ int regex_match(const char *string,char *pattern)
   }
   return(1);
 }
-
+#endif

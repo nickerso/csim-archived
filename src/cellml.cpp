@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include <iostream>
-#include <inttypes.h>
+//#include <inttypes.h>
 #include <exception>
 #include <cstdio>
 #include <cstdlib>
@@ -892,7 +892,7 @@ writeCode(iface::cellml_services::CodeInformation* cci,
    */
   frag = cci->initConstsString();
   code += L"void SetupFixedConstants(double* CONSTANTS,double* RATES,"
-    "double* STATES)\n{\n";
+    L"double* STATES)\n{\n";
   code += frag;
   code += L"}\n";
 

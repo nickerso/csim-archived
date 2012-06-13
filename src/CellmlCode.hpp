@@ -14,7 +14,7 @@ class CellmlCode
 {
 public:
 	CellmlCode();
-	CellmlCode(bool saveGeneratedCode = false);
+	CellmlCode(bool saveGeneratedCode);
 	~CellmlCode();
 
 	int createCodeForSimulation(struct Simulation* simulation, bool generateDebugCode = false);
