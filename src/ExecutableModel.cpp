@@ -36,10 +36,14 @@
 using namespace clang;
 using namespace clang::driver;
 
+#ifndef _MSC_VER
 extern "C"
 {
+#endif
 #include "utils.h"
+#ifndef _MSC_VER
 }
+#endif
 
 #include "ModelCompiler.hpp"
 

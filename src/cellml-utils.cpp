@@ -47,14 +47,18 @@
 #include "cellml-utils.h"
 #include "utils.hxx"
 
+#ifndef _MSC_VER
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+#endif
 #include "utils.h"
 #include "common.h"
+#ifndef _MSC_VER
 #ifdef __cplusplus
 } /* closing brace for extern "C" */
+#endif
 #endif
 
 /*

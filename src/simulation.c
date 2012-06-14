@@ -10,6 +10,10 @@
 #include "simulation.h"
 #include "outputVariables.h"
 
+#ifdef _MSC_VER
+#  define strcasecmp _stricmp
+#endif
+
 #define INVALID_MM_STRING "invalid Multistep Method"
 #define INVALID_IM_STRING "invalid Iteration Method"
 #define INVALID_LS_STRING "invalid Linear Solver"
@@ -367,19 +371,19 @@ double simulationGetBvarMaxStep(struct Simulation* sim)
 enum MultistepMethod simulationGetMultistepMethod(struct Simulation* sim)
 {
   if (sim) return(sim->lmm);
-  return(-1);
+  return(INVALID_MM);
 }
 
 enum IterationMethod simulationGetIterationMethod(struct Simulation* sim)
 {
   if (sim) return(sim->iter);
-  return(-1);
+  return(INVALID_IM);
 }
 
 enum LinearSolver simulationGetLinearSolver(struct Simulation* sim)
 {
   if (sim) return(sim->solver);
-  return(-1);
+  return(INVALID_LS);
 }
 
 double* simulationGetATol(struct Simulation* sim)
@@ -447,14 +451,14 @@ enum MultistepMethod multistepMethodFromString(const char* lmm)
 {
   if (strcasecmp(lmm,"Adams") == 0) return(ADAMS);
   else if (strcasecmp(lmm,"BDF") == 0) return(BDF);
-  return(-1);
+  return(INVALID_MM);
 }
 
 enum IterationMethod iterationMethodFromString(const char* iter)
 {
   if (strcasecmp(iter,"Functional") == 0) return(FUNCTIONAL);
   else if (strcasecmp(iter,"Newton") == 0) return(NEWTON);
-  return(-1);
+  return(INVALID_IM);
 }
 
 enum LinearSolver linearSolverFromString(const char* solver)
@@ -466,7 +470,7 @@ enum LinearSolver linearSolverFromString(const char* solver)
   else if (strcasecmp(solver,"SPBCG") == 0) return(SPBCG);
   else if (strcasecmp(solver,"SPTFQMR") == 0) return(SPTFQMR);
   else if (strcasecmp(solver,"NONE") == 0) return(NONE);
-  return(-1);
+  return(INVALID_LS);
 }
 
 int simulationPrint(struct Simulation* s,FILE* f,const char* indent)

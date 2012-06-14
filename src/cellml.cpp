@@ -58,18 +58,26 @@
 #include "cellml-utils.h"
 #include "cellml.hpp"
 #include "utils.hxx"
+#ifndef _MSC_VER
 extern "C"
 {
+#endif
 #include "outputVariables.h"
+#ifndef _MSC_VER
 }
+#endif
 
+#ifndef _MSC_VER
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+#endif
 #include "utils.h"
+#ifndef _MSC_VER
 #ifdef __cplusplus
 } /* closing brace for extern "C" */
+#endif
 #endif
 
 struct CellMLModel

@@ -18,7 +18,8 @@ void printMemoryStats();
 
 /* A useful way to time a single function call? */
 #ifdef _MSC_VER
-#  define TIME_FUNCTION_CALL
+#  define TIME_FUNCTION_CALL(time_array,timer,return_value,function,...)  \
+		return_value = function(__VA_ARGS__)
 #else
 #  define TIME_FUNCTION_CALL(time_array,timer,return_value,function,...)  \
   struct Timer* timer = CreateTimer();                                  \

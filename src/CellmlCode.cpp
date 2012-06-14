@@ -15,16 +15,21 @@
 #  include <fcntl.h>
 #  include <windows.h>
 #  define unlink _unlink
+#  define fdopen _fdopen
 #  define mkstemp win32_mkstemp
 #endif
 
 #include "CellmlCode.hpp"
+#ifndef _MSC_VER
 extern "C"
 {
+#endif
 #include "utils.h"
 #include "simulation.h"
 #include "cellml.h"
+#ifndef _MSC_VER
 }
+#endif
 
 // from http://gitorious.org/git-win32/mainline/blobs/8cfc8e4414bbb568075a948562ebb357cb84b6c3/win32/mkstemp.c
 #ifdef _MSC_VER

@@ -9,10 +9,14 @@
 #include <string>
 #include <vector>
 
+#ifndef _MSC_VER
 extern "C"
 {
+#endif
 #include "outputVariables.h"
+#ifndef _MSC_VER
 }
+#endif
 
 enum VariableType
 {

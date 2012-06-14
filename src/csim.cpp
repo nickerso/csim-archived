@@ -3,15 +3,18 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <getopt.h>
-#include <unistd.h>
+#ifndef _MSC_VER
+#  include <getopt.h>
+#endif
 #include <time.h>
 #include <signal.h>
 #include <string>
 #include <iostream>
 
+#ifndef _MSC_VER
 extern "C"
 {
+#endif
 #include "version.h"
 #include "common.h"
 #include "utils.h"
@@ -19,7 +22,9 @@ extern "C"
 #include "simulation.h"
 #include "timer.h"
 #include "xpath.h"
+#ifndef _MSC_VER
 }
+#endif
 
 #include "integrator.hpp"
 #include "CellmlCode.hpp"
@@ -70,6 +75,10 @@ static void usage(char* prog)
 {
 	printf("Examines given input CellML and executes the\n"
 			"simulation that is found, writing the simulation outputs to the terminal.\n\n");
+#ifdef _MSC_VER
+	printf("Usage: %s <input file>\n\n", prog);
+	printf("No options for windows version yet.\n\n");
+#else
 	printf("Usage: %s [options] <input file>\n\n", prog);
 	printf(
 			"Available options:\n"
@@ -84,6 +93,7 @@ static void usage(char* prog)
 					"\tGenerate code with debug bits included, useful for finding errors in "
 					"models.\n"
 					"\n");
+#endif // _MSC_VER
 }
 
 static void help(char* prog)
@@ -100,7 +110,7 @@ static void help(char* prog)
 			"%s uses:\n"
 			"- The CellML API (version 1.11)\n"
 			"  http://www.cellml.org\n"
-			"- LLVM/Clang (version TODO)\n"
+			"- LLVM/Clang (version 3.1)\n"  // FIXME: need to pull in verson better?
 			"  http://www.llvm.org\n"
 			"- The CVODES integrator from sundials (version %s)\n"
 			"  http://www.llnl.gov/CASC/sundials/\n", prog, sundials_version);
@@ -120,11 +130,25 @@ int main(int argc, char* argv[])
 	signalData.code = NULL;
 
 	/* Parse command line arguments */
-	int c, invalidargs = 0;
+	int invalidargs = 0;
 	static int helpRequest = 0;
 	static int versionRequest = 0;
 	static int saveTempFiles = 0;
 	static int generateDebugCode = 0;
+#ifdef _MSC_VER
+	// no standard getopt_long for windows, so default some decent options
+	setQuiet();
+	int optind;
+	if (argc == 2)
+	{
+		optind = 1;
+	}
+	else
+	{
+		invalidargs = 1;
+		optind = argc + 1;
+	}
+#else
 	while (1)
 	{
 		static struct option long_options[] =
@@ -137,7 +161,7 @@ int main(int argc, char* argv[])
 		{ "debug", no_argument, NULL, 14 },
 		{ 0, 0, 0, 0 } };
 		int option_index;
-		c = getopt_long(argc, argv, "", long_options, &option_index);
+		int c = getopt_long(argc, argv, "", long_options, &option_index);
 		/* check if we're finished the options */
 		if (c == -1)
 			break;
@@ -178,6 +202,7 @@ int main(int argc, char* argv[])
 			break;
 		}
 	}
+#endif
 
 	/* CellML model should be the only other entry on the command line */
 	if (optind < argc)

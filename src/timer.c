@@ -59,10 +59,10 @@ struct Timer
   double wall[2];    /* Wall clock */
 };
 
-#ifndef _MSC_VER
 struct Timer* CreateTimer()
 {
   struct Timer* t = (struct Timer*)malloc(sizeof(struct Timer));
+#ifndef _MSC_VER
   t->user[0] = 0;
   t->user[1] = 0;
   t->system[0] = 0;
@@ -70,6 +70,7 @@ struct Timer* CreateTimer()
   t->wall[0] = 0;
   t->wall[1] = 0;
   t->state = NONE;
+#endif
   return(t);
 }
 
@@ -82,6 +83,7 @@ int DestroyTimer(struct Timer** t)
 
 int startTimer(struct Timer* t)
 {
+#ifndef _MSC_VER
   struct rusage r;
   struct timeval  tv;
   struct timezone tz;
@@ -98,11 +100,13 @@ int startTimer(struct Timer* t)
   t->wall[0]   = ((double)tv.tv_sec) + ((double)tv.tv_usec)/c;
 
   t->state = STARTED;
+#endif
   return(1);
 }
 
 int stopTimer(struct Timer* t)
 {
+#ifndef _MSC_VER
   struct rusage r;
   struct timeval  tv;
   struct timezone tz;
@@ -125,11 +129,13 @@ int stopTimer(struct Timer* t)
   t->wall[1]   = ((double)tv.tv_sec) + ((double)tv.tv_usec)/c;
 
   t->state = STOPPED;
+#endif
   return(1);
 }
 
 double getUserTime(struct Timer* t)
 {
+#ifndef _MSC_VER
   if (t->state == STOPPED)
   {
     return(t->user[1] - t->user[0]);
@@ -139,10 +145,14 @@ double getUserTime(struct Timer* t)
     fprintf(stderr,"Timer not stopped\n");
     return(-1);
   }
+#else
+  return(-1);
+#endif
 }
 
 double getSystemTime(struct Timer* t)
 {
+#ifndef _MSC_VER
   if (t->state == STOPPED)
   {
     return(t->system[1] - t->system[0]);
@@ -152,10 +162,14 @@ double getSystemTime(struct Timer* t)
     fprintf(stderr,"Timer not stopped\n");
     return(-1);
   }
+#else
+  return (-1);
+#endif
 }
 
 double getWallTime(struct Timer* t)
 {
+#ifndef _MSC_VER
   if (t->state == STOPPED)
   {
     return(t->wall[1] - t->wall[0]);
@@ -165,8 +179,11 @@ double getWallTime(struct Timer* t)
     fprintf(stderr,"Timer not stopped\n");
     return(-1);
   }
+#else
+  return(-1);
+#endif
 }
-#endif // _MSC_VER
+
 
 void printMemoryStats()
 {

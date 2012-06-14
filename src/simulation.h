@@ -14,8 +14,9 @@
 enum MultistepMethod
 {
   /*EULER,IMPROVED_EULER,RK4?? is it worth it? */
-  ADAMS,
-  BDF
+  ADAMS=1,
+  BDF=2,
+  INVALID_MM=-1
 };
 
 /*
@@ -29,8 +30,9 @@ enum MultistepMethod
  */
 enum IterationMethod
 {
-  FUNCTIONAL,
-  NEWTON
+  FUNCTIONAL=1,
+  NEWTON=2,
+  INVALID_IM=-1
 };
 
 /*
@@ -52,7 +54,8 @@ enum LinearSolver
   SPGMR,   /* Krylov iterative solvers, which use scaled preconditioned     */
   SPBCG,   /*   GMRES, scaled preconditioned Bi-CGStab, and scaled          */
   SPTFQMR, /*   preconditioned TFQMR, respectively.*/
-  NONE     /* The default for when a linear solver is not needed */
+  NONE,    /* The default for when a linear solver is not needed */
+  INVALID_LS=-1
 };
 
 /* private type */
