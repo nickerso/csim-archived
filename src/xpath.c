@@ -38,6 +38,8 @@ struct Simulation* getSimulation(const char* uri)
 	xmlInitParser();
 	LIBXML_TEST_VERSION
 
+	DEBUG(99, "getSimulation", "Starting to get the simulation for uri: %s\n", uri);
+
 	doc = xmlParseFile(uri);
 	if (doc == NULL)
 	{
@@ -52,17 +54,25 @@ struct Simulation* getSimulation(const char* uri)
 	simulationSetModelURI(simulation, uri);
 	simulationSetBvarURI(simulation, "bob");
 
+	DEBUG(99, "getSimulation", "set base fields for new simulation\n");
+
 	// TODO: need to get algorithm and parameters...
 
 	value = getTextContent(doc, BAD_CAST "//csim:simulation/@id");
 	if (value)
 	{
+		DEBUG(99, "getSimulation", "got the simulation ID from the input document.\n");
 		simulationSetID(simulation, value);
+		DEBUG(99, "getSimulation", "free(value) go\n");
 		free(value);
+		DEBUG(99, "getSimulation", "free(value) gone\n");
 	}
 	else WARNING("getSimulation", "Missing simulation ID\n");
 	if (getDoubleContent(doc, BAD_CAST "//csim:simulation/csim:boundVariable/@start", &number))
+	{
+		DEBUG(99, "getSimulation", "Got a double value for BvarStart...\n");
 		simulationSetBvarStart(simulation, number);
+	}
 	else WARNING("getSimulation", "Missing simulation bvar start\n");
 	if (getDoubleContent(doc, BAD_CAST "//csim:simulation/csim:boundVariable/@end", &number))
 		simulationSetBvarEnd(simulation, number);
@@ -73,6 +83,7 @@ struct Simulation* getSimulation(const char* uri)
 	if (getDoubleContent(doc, BAD_CAST "//csim:simulation/csim:boundVariable/@tabulationStep", &number))
 		simulationSetBvarTabStep(simulation, number);
 	else WARNING("getSimulation", "Missing simulation bvar tab step\n");
+	DEBUG(99, "getSimulation", "Got the double type input parameters for the simulation.\n");
 
 	variableList = getOutputVariables(doc);
 	if (variableList)
@@ -82,9 +93,13 @@ struct Simulation* getSimulation(const char* uri)
 	}
 	else WARNING("getSimulation", "Missing simulation output variables\n");
 
+	DEBUG(99, "getSimulation", "got the output variables for the simulation.\n");
+
 	xmlFreeDoc(doc);
+	DEBUG(99, "getSimulation", "xmlFreeDoc worked.\n");
 	/* Shutdown libxml */
 	xmlCleanupParser();
+	DEBUG(99, "getSimulation", "xmlCleanupParser worked.\n");
 
 	return simulation;
 }
@@ -140,7 +155,8 @@ static char* getTextContent(xmlDocPtr doc, const xmlChar* xpathExpr)
 		{
 			xmlNodePtr n = xmlXPathNodeSetItem(results, 0);
 			xmlChar* s = xmlNodeGetContent(n);
-			text = (char*)s;
+			text = strcopy((char*)s);
+			xmlFree(s);
 		}
 		xmlXPathFreeNodeSet(results);
 	}
@@ -150,7 +166,9 @@ static char* getTextContent(xmlDocPtr doc, const xmlChar* xpathExpr)
 static int getDoubleContent(xmlDocPtr doc, const xmlChar* xpathExpr, double* value)
 {
 	int returnCode = 0;
-	xmlNodeSetPtr results = executeXPath(doc, xpathExpr);
+	xmlNodeSetPtr results = NULL;
+	DEBUG(99, "getDoubleContent", "Executing the XPath: %s\n", xpathExpr);
+	results = executeXPath(doc, xpathExpr);
 	if (results)
 	{
 		if (xmlXPathNodeSetGetLength(results) == 1)
@@ -159,7 +177,9 @@ static int getDoubleContent(xmlDocPtr doc, const xmlChar* xpathExpr, double* val
 			xmlChar* s = xmlNodeGetContent(n);
 			if (sscanf((char*)s, "%lf", value) == 1) returnCode = 1;
 			else ERROR("getDoubleContent", "found a value for xpath expression, but its not a number: \"%s\"\n", (char*)s);
-			free(s);
+			DEBUG(99, "getSimulation", "free(s) go\n");
+			xmlFree(s);
+			DEBUG(99, "getSimulation", "free(s) gone\n");
 		}
 		xmlXPathFreeNodeSet(results);
 	}
@@ -188,10 +208,10 @@ static void* getOutputVariables(xmlDocPtr doc)
 					c = -1;
 					ERROR("getOutputVariables", "found a value for a column, but its not a integer: \"%s\"\n", (char*)column);
 				}
-				free(column);
+				xmlFree(column);
 				outputVariablesAppendVariable(list, component, variable, c);
-				free(component);
-				free(variable);
+				xmlFree(component);
+				xmlFree(variable);
 			}
 		}
 	}

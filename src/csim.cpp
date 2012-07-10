@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 	static int generateDebugCode = 0;
 #ifdef _MSC_VER
 	// no standard getopt_long for windows, so default some decent options
-	//setQuiet();
+	setQuiet();
 	int optind;
 	if (argc == 2)
 	{
@@ -208,6 +208,12 @@ int main(int argc, char* argv[])
 	if (optind < argc)
 		inputURI = getAbsoluteURI(argv[optind]);
 
+	if (debugLevel() > 98)
+	{
+		if (inputURI) DEBUG(99, "main", "inputURI found and is: %s\n", inputURI);
+		else DEBUG(99, "main", "inputURI not found\n");
+	}
+
 	if (helpRequest)
 	{
 		help(argv[0]);
@@ -242,8 +248,12 @@ int main(int argc, char* argv[])
 	 interrupt signal is received, and save any existing handler? */
 	signalData.handler = signal(SIGINT, &signalHandler);
 
+	DEBUG(99, "main", "About to try and get the simulation from: %s\n", inputURI);
+
 	/* look for a single simulation */
 	simulation = getSimulation(inputURI);
+
+	DEBUG(99, "main", "Got the simulation from: %s\n", inputURI);
 
 	int code = OK;
 	if (simulation)

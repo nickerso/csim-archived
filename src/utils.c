@@ -22,7 +22,7 @@
 
 #define WHITESPACE_STR  " \f\n\r\t\v"
 
-static int _current_debug_level = 100;
+static int _current_debug_level = 0;
 static int _quiet_flag = 0;
 
 char* strcopy(const char* string)
@@ -91,39 +91,45 @@ char *vstrcat(char *first,...)
    and simply pass in the CWD as the base_uri to resolve about */
 char* getAbsoluteURI(const char* uri)
 {
-  if (uri)
-  {
-    if (strstr(uri,"://") != NULL)
-    {
-      /*printf("URI (%s) already absolute.\n",uri);*/
-      char* abs = (char*)malloc(strlen(uri)+1);
-      strcpy(abs,uri);
-      return(abs);
-    }
-    else if (uri[0]=='/')
-    {
-      /*printf("URI (%s) absolute path, making absolute URI: ",uri);*/
-      char* abs = (char*)malloc(strlen(uri)+1+7);
-      sprintf(abs,"file://%s",uri);
-      /*printf("%s\n",abs);*/
-      return(abs);
-    }
-    else
-    {
-      /* relative filename ? append absoulte path */
-      /*printf("URI (%s) is relative path, making absolute URI: ",uri);*/
-      int size = PATH_MAX_SIZE;
-	  char* abs;
-      char* cwd = (char*)malloc(size);
-      if (!getcwd(cwd,size)) cwd[0] = '\0';
-      abs = (char*)malloc(strlen(cwd)+strlen(uri)+1+8);
-      sprintf(abs,"file://%s/%s",cwd,uri);
-      free(cwd);
-      /*printf("%s\n",abs);*/
-      return(abs);
-    }
-  }
-  return((char*)NULL);
+	char* abs = NULL;
+	if (uri)
+	{
+		DEBUG(99, "getAbsoluteURI", "Getting the absolute URI for: %s\n", uri);
+		if (strstr(uri,"://") != NULL)
+		{
+			DEBUG(99, "getAbsoluteURI", "URI is already an absolute URI: %s\n", uri);
+			/*printf("URI (%s) already absolute.\n",uri);*/
+			abs = (char*)malloc(strlen(uri)+1);
+			strcpy(abs,uri);
+			DEBUG(99, "getAbsoluteURI", "Returning copy of input URI: %s\n", abs);
+			return(abs);
+		}
+		else if (uri[0]=='/')
+		{
+			DEBUG(99, "getAbsoluteURI", "URI is an absolute path, so making it an absolute URI: %s\n", uri);
+			/*printf("URI (%s) absolute path, making absolute URI: ",uri);*/
+			abs = (char*)malloc(strlen(uri)+1+7);
+			sprintf(abs,"file://%s",uri);
+			/*printf("%s\n",abs);*/
+			DEBUG(99, "getAbsoluteURI", "Returning absolute URI version: %s\n", abs);
+			return(abs);
+		}
+		else
+		{
+			int size = PATH_MAX_SIZE;
+			char* cwd = (char*)malloc(size);
+			/* relative filename ? append absoulte path */
+			DEBUG(99, "getAbsoluteURI", "URI is a relative path so making it absolute: %s\n", uri);
+			/*printf("URI (%s) is relative path, making absolute URI: ",uri);*/
+			if (!getcwd(cwd,size)) cwd[0] = '\0';
+			abs = (char*)malloc(strlen(cwd)+strlen(uri)+1+8);
+			sprintf(abs,"file://%s/%s",cwd,uri);
+			free(cwd);
+			/*printf("%s\n",abs);*/
+			return(abs);
+		}
+	}
+	return((char*)NULL);
 }
 
 void setQuiet()
