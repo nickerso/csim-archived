@@ -20,14 +20,14 @@
 #endif
 
 #include "CellmlCode.hpp"
-#ifndef _MSC_VER
+#ifdef __cplusplus
 extern "C"
 {
 #endif
 #include "utils.h"
 #include "simulation.h"
 #include "cellml.h"
-#ifndef _MSC_VER
+#ifdef __cplusplus
 }
 #endif
 

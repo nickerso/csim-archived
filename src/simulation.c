@@ -51,6 +51,8 @@ struct Simulation
 
 struct Simulation* CreateSimulation()
 {
+  double rtol = 1.0e-6;
+  double atol = 1.0e-8;
   struct Simulation* sim = (struct Simulation*)
     malloc(sizeof(struct Simulation));
   sim->uri = (char*)NULL;
@@ -76,8 +78,6 @@ struct Simulation* CreateSimulation()
   sim->rTolSet = 0;
 
   /* Until this gets added to the metadata set the default tolerances here */
-  double rtol = 1.0e-6;
-  double atol = 1.0e-8;
   simulationSetRTol(sim,rtol);
   simulationSetATol(sim,1,&atol);
   sim->outputVariables = NULL;
@@ -560,6 +560,7 @@ int simulationIsValidDescription(struct Simulation* simulation)
 {
   if (simulation)
   {
+	enum IterationMethod im;
     if (simulation->uri == NULL) return(0);
     if (simulation->id == NULL) return(0);
     if (simulation->modelURI == NULL) return(0);
@@ -570,7 +571,7 @@ int simulationIsValidDescription(struct Simulation* simulation)
     if (!simulationIsBvarTabStepSet(simulation)) return(0);
     if (!simulationIsRTolSet(simulation)) return(0);
     if (simulationGetATolLength(simulation) < 1) return(0);
-    enum IterationMethod im = simulationGetIterationMethod(simulation);
+    im = simulationGetIterationMethod(simulation);
     if (strcmp(
           multistepMethodToString(simulationGetMultistepMethod(simulation)),
           INVALID_MM_STRING) == 0) return(0);

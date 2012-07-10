@@ -14,7 +14,7 @@
 #include <cvodes/cvodes_sptfqmr.h> /* prototypes & consts. for CVSPTFQMR solver */
 #include <sundials/sundials_dense.h> /* definitions DenseMat and DENSE_ELEM */
 
-#ifndef _MSC_VER
+#ifdef __cplusplus
 extern "C"
 {
 #endif
@@ -22,7 +22,7 @@ extern "C"
 #include "utils.h"
 #include "simulation.h"
 #include "ccgs_required_functions.h"
-#ifndef _MSC_VER
+#ifdef __cplusplus
 }
 #endif
 

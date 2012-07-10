@@ -36,12 +36,12 @@
 using namespace clang;
 using namespace clang::driver;
 
-#ifndef _MSC_VER
+#ifdef __cplusplus
 extern "C"
 {
 #endif
 #include "utils.h"
-#ifndef _MSC_VER
+#ifdef __cplusplus
 }
 #endif
 

@@ -115,7 +115,7 @@ set(REQ_CLANG_LIBRARIES
 # Set compiler flags
 if (WIN32)
     # need to treat all C files as C++ to avoid problems (http://stackoverflow.com/questions/2706453/what-is-the-cause-of-these-visual-studio-2010-errors-warnings)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /TP")
+    #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /TP")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4290 /wd4091")
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 else(WIN32)

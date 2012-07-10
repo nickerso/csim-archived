@@ -9,12 +9,12 @@
 #include <string>
 #include <vector>
 
-#ifndef _MSC_VER
+#ifdef __cplusplus
 extern "C"
 {
 #endif
 #include "outputVariables.h"
-#ifndef _MSC_VER
+#ifdef __cplusplus
 }
 #endif
 

@@ -58,26 +58,14 @@
 #include "cellml-utils.h"
 #include "cellml.hpp"
 #include "utils.hxx"
-#ifndef _MSC_VER
+#ifdef __cplusplus
 extern "C"
 {
 #endif
 #include "outputVariables.h"
-#ifndef _MSC_VER
-}
-#endif
-
-#ifndef _MSC_VER
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-#endif
 #include "utils.h"
-#ifndef _MSC_VER
 #ifdef __cplusplus
 } /* closing brace for extern "C" */
-#endif
 #endif
 
 struct CellMLModel
@@ -1230,7 +1218,7 @@ L"infinity: #prec[900]1.0/0.0\r\n"
     {
       cci = cg->generateCode(model->model);
     }
-    catch (iface::cellml_api::CellMLException& ce)
+    catch (iface::cellml_api::CellMLException&)
     {
       ERROR("getCellMLModelAsCCode",
         "Caught a CellMLException while generating code\n");

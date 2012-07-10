@@ -11,7 +11,7 @@
 #include <string>
 #include <iostream>
 
-#ifndef _MSC_VER
+#ifdef __cplusplus
 extern "C"
 {
 #endif
@@ -22,7 +22,7 @@ extern "C"
 #include "simulation.h"
 #include "timer.h"
 #include "xpath.h"
-#ifndef _MSC_VER
+#ifdef __cplusplus
 }
 #endif
 
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 	static int generateDebugCode = 0;
 #ifdef _MSC_VER
 	// no standard getopt_long for windows, so default some decent options
-	setQuiet();
+	//setQuiet();
 	int optind;
 	if (argc == 2)
 	{

@@ -22,7 +22,7 @@
 
 #define WHITESPACE_STR  " \f\n\r\t\v"
 
-static int _current_debug_level = 0;
+static int _current_debug_level = 100;
 static int _quiet_flag = 0;
 
 char* strcopy(const char* string)
@@ -113,9 +113,10 @@ char* getAbsoluteURI(const char* uri)
       /* relative filename ? append absoulte path */
       /*printf("URI (%s) is relative path, making absolute URI: ",uri);*/
       int size = PATH_MAX_SIZE;
+	  char* abs;
       char* cwd = (char*)malloc(size);
       if (!getcwd(cwd,size)) cwd[0] = '\0';
-      char* abs = (char*)malloc(strlen(cwd)+strlen(uri)+1+8);
+      abs = (char*)malloc(strlen(cwd)+strlen(uri)+1+8);
       sprintf(abs,"file://%s/%s",cwd,uri);
       free(cwd);
       /*printf("%s\n",abs);*/
@@ -194,8 +195,8 @@ char* uriRemovePathSeparator(const char* uri)
   char* string = (char*)NULL;
   if (uri && (strlen(uri) > 0))
   {
-    string = strcopy(uri);
     char* m = (char*)NULL;
+    string = strcopy(uri);
     while((m = strchr(string,'/'))) *m = '_';
   }
   return(string);

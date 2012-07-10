@@ -29,18 +29,23 @@ static void* getOutputVariables(xmlDocPtr doc);
 
 struct Simulation* getSimulation(const char* uri)
 {
+	struct Simulation* simulation;
+	char* value;
+	xmlDocPtr doc;
+	double number;
+	void* variableList;
 	/* Init libxml */
 	xmlInitParser();
 	LIBXML_TEST_VERSION
 
-	xmlDocPtr doc = xmlParseFile(uri);
+	doc = xmlParseFile(uri);
 	if (doc == NULL)
 	{
 		ERROR("getSimulation", "Error: unable to parse URI \"%s\"\n", uri);
 		return(NULL);
 	}
 
-	struct Simulation* simulation = CreateSimulation();
+	simulation = CreateSimulation();
 	DEBUG(0, "getSimulation", "created a blank simulation\n");
 	// these are not yet used, but need to be set.
 	simulationSetURI(simulation, uri);
@@ -49,14 +54,13 @@ struct Simulation* getSimulation(const char* uri)
 
 	// TODO: need to get algorithm and parameters...
 
-	char* value = getTextContent(doc, BAD_CAST "//csim:simulation/@id");
+	value = getTextContent(doc, BAD_CAST "//csim:simulation/@id");
 	if (value)
 	{
 		simulationSetID(simulation, value);
 		free(value);
 	}
 	else WARNING("getSimulation", "Missing simulation ID\n");
-	double number;
 	if (getDoubleContent(doc, BAD_CAST "//csim:simulation/csim:boundVariable/@start", &number))
 		simulationSetBvarStart(simulation, number);
 	else WARNING("getSimulation", "Missing simulation bvar start\n");
@@ -70,7 +74,7 @@ struct Simulation* getSimulation(const char* uri)
 		simulationSetBvarTabStep(simulation, number);
 	else WARNING("getSimulation", "Missing simulation bvar tab step\n");
 
-	void* variableList = getOutputVariables(doc);
+	variableList = getOutputVariables(doc);
 	if (variableList)
 	{
 		simulationSetOutputVariables(simulation, variableList);
@@ -89,6 +93,7 @@ static xmlNodeSetPtr executeXPath(xmlDocPtr doc, const xmlChar* xpathExpr)
 {
 	xmlXPathContextPtr xpathCtx;
 	xmlXPathObjectPtr xpathObj;
+	xmlNodeSetPtr results = NULL;
 	/* Create xpath evaluation context */
 	xpathCtx = xmlXPathNewContext(doc);
 	if (xpathCtx == NULL)
@@ -112,11 +117,10 @@ static xmlNodeSetPtr executeXPath(xmlDocPtr doc, const xmlChar* xpathExpr)
 		return NULL;
 	}
 
-	xmlNodeSetPtr results = NULL;
 	if (xmlXPathNodeSetGetLength(xpathObj->nodesetval) > 0)
 	{
-		results = xmlXPathNodeSetCreate(NULL);
 		int i;
+		results = xmlXPathNodeSetCreate(NULL);
 		for (i=0; i< xmlXPathNodeSetGetLength(xpathObj->nodesetval); ++i)
 			xmlXPathNodeSetAdd(results, xmlXPathNodeSetItem(xpathObj->nodesetval, i));
 	}
@@ -168,8 +172,8 @@ static void* getOutputVariables(xmlDocPtr doc)
 	xmlNodeSetPtr results = executeXPath(doc, BAD_CAST "//csim:simulation/csim:outputVariable");
 	if (results)
 	{
-		list = outputVariablesCreate();
 		int i, n = xmlXPathNodeSetGetLength(results);
+		list = outputVariablesCreate();
 		for (i = 0; i < n; ++i)
 		{
 			xmlNodePtr node = xmlXPathNodeSetItem(results, i);
