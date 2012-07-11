@@ -4,9 +4,11 @@
 */
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "version.h"
 #include "utils.h"
+#include "csim-config.h"
 
 /* these get filled in by the build process */
 /*SVN_VERSION_STRING*/
@@ -15,14 +17,10 @@
 /* might use this stuff one day for conditional compilation? */
 static char* SundialsVersion = "/*SUNDIALS_VERSION*/";
 
-/* just a counter to keep track of stuff? */
-static char* VersionString = "0.1.0";
-
 char* getVersion(const char* tool,const char* toolVersion)
 {
-  char* string = (char*)NULL;
-  string = vstrcat(string,"CellMLSimulator-minimal ",
-    VersionString,(char*)NULL);
+  char* string = (char*)malloc(strlen("CSim XXX.XXX  "));
+  sprintf(string, "CSim %d.%d", CSim_VERSION_MAJOR, CSim_VERSION_MINOR);
   if (tool)
   {
     string = vstrcat(string," (",tool,(char*)NULL);

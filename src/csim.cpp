@@ -76,8 +76,9 @@ static void usage(char* prog)
 	printf("Examines given input CellML and executes the\n"
 			"simulation that is found, writing the simulation outputs to the terminal.\n\n");
 #ifdef _MSC_VER
-	printf("Usage: %s <input file>\n\n", prog);
-	printf("No options for windows version yet.\n\n");
+	printf("Usage: %s <input file> [XXX]\n\n", prog);
+	printf("No options for windows version yet, but put random characters after the <input file>\n"
+			"to get some help.\n\n");
 #else
 	printf("Usage: %s [options] <input file>\n\n", prog);
 	printf(
@@ -143,6 +144,11 @@ int main(int argc, char* argv[])
 	{
 		optind = 1;
 	}
+	else if (argc == 3)
+	{
+		printVersion();
+		helpRequest = 1;
+	}
 	else
 	{
 		invalidargs = 1;
@@ -204,16 +210,6 @@ int main(int argc, char* argv[])
 	}
 #endif
 
-	/* CellML model should be the only other entry on the command line */
-	if (optind < argc)
-		inputURI = getAbsoluteURI(argv[optind]);
-
-	if (debugLevel() > 98)
-	{
-		if (inputURI) DEBUG(99, "main", "inputURI found and is: %s\n", inputURI);
-		else DEBUG(99, "main", "inputURI not found\n");
-	}
-
 	if (helpRequest)
 	{
 		help(argv[0]);
@@ -225,6 +221,16 @@ int main(int argc, char* argv[])
 		printVersion();
 		PRE_EXIT_FREE;
 		return (0);
+	}
+
+	/* CellML model should be the only other entry on the command line */
+	if (optind < argc)
+		inputURI = getAbsoluteURI(argv[optind]);
+
+	if (debugLevel() > 98)
+	{
+		if (inputURI) DEBUG(99, "main", "inputURI found and is: %s\n", inputURI);
+		else DEBUG(99, "main", "inputURI not found\n");
 	}
 
 	/* Check required arguments */

@@ -16,6 +16,16 @@ elseif( ${OPERATING_SYSTEM} STREQUAL "darwin" )
     SET(LLVM_DIR /Users/dnic019/shared-folders/projects/cellml-simulator/LLVM/local/macosx-debug/share/llvm/cmake)
 endif()
 
+# Set version information in a config.h file
+set(CSim_VERSION_MAJOR 0)
+set(CSim_VERSION_MINOR 4)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/src/csim-config.h.in"
+  "${PROJECT_BINARY_DIR}/csim-config.h"
+  )
+include_directories("${PROJECT_BINARY_DIR}")
+
+
 # Add in the directory with the FindCellML module
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CSim_SOURCE_DIR} ${LLVM_DIR})
 
@@ -121,7 +131,7 @@ if (WIN32)
 else(WIN32)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
     add_definitions(-Wall -Werror)
-    set(PLATFORM_LIBS ${PLATFORM_LIBS} "lapack" "blas")
+    set(PLATFORM_LIBS ${PLATFORM_LIBS} "lapack" "blas" "m")
 endif(WIN32)
 ADD_DEFINITIONS(
    ${LIBXML2_DEFINITIONS}
@@ -180,8 +190,9 @@ SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/version.c
   PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/src
 )
 
-ADD_EXECUTABLE(csim ${CSim_SRCS} ${CMAKE_BINARY_DIR}/version.c)
-TARGET_LINK_LIBRARIES(csim
+set(EXECUTABLE_NAME "csim")
+ADD_EXECUTABLE(${EXECUTABLE_NAME} ${CSim_SRCS} ${CMAKE_BINARY_DIR}/version.c)
+TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME}
   ${REQ_CLANG_LIBRARIES}
   ${REQ_LLVM_LIBRARIES}
   ${CELLML_LIBRARIES}
@@ -190,6 +201,48 @@ TARGET_LINK_LIBRARIES(csim
   ${LIBXML2_LIBRARIES}
   ${ZLIB_LIBRARIES}
   ${PLATFORM_LIBS}
-  -lm
 )
 
+# Install the build application
+install(TARGETS ${EXECUTABLE_NAME} DESTINATION bin)
+# need to install the CellML libraries as well
+function (install_libraries)
+  if (UNIX)
+    # OSX and Linux can just install .dylib and .so libraries directly
+    foreach(file ${ARGV})
+        install(FILES ${file} DESTINATION bin)
+        #message(STATUS "installing ${file} into bin")
+    endforeach()
+  elseif(WIN32)
+    # need to map from .lib to .dll
+    foreach(file ${ARGV})
+      get_filename_component(dir ${file} PATH)
+      get_filename_component(name_without_extension ${file} NAME_WE)
+      set(install_library "${dir}/${name_without_extension}.dll")
+      install (FILES ${install_library} DESTINATION bin)
+      #message(STATUS "installing DLL: ${install_library}")
+    endforeach ()
+  endif ()
+endfunction ()
+install_libraries(${CELLML_LIBRARIES})
+install_libraries(${CCGS_LIBRARIES})
+if (WIN32)
+    # also need libxml2 for windows
+    get_filename_component(xml2Dir ${LIBXML2_LIBRARIES} PATH)
+    install(FILES ${xml2Dir}/../bin/libxml2.dll DESTINATION bin)
+    install(FILES ${xml2Dir}/../bin/zlib1.dll DESTINATION bin)
+    install(FILES ${xml2Dir}/../bin/iconv.dll DESTINATION bin)
+endif(WIN32)
+#message(STATUS "CellML libraries: ${CELLML_LIBRARIES}")
+#message(STATUS "CCGS libraries: ${CCGS_LIBRARIES}")
+#message(STATUS "LIBXML2 libraries: ${LIBXML2_LIBRARIES}")
+#message(FATAL_ERROR "all the libraries needed?")
+
+
+
+# CPack packaging
+include(InstallRequiredSystemLibraries)
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
+set(CPACK_PACKAGE_VERSION_MAJOR "${CSim_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${CSim_VERSION_MINOR}")
+include(CPack)

@@ -1,0 +1,7 @@
+#ifndef _CSIM_CONFIG_H_
+#define _CSIM_CONFIG_H_
+
+#define CSim_VERSION_MAJOR @CSim_VERSION_MAJOR@
+#define CSim_VERSION_MINOR @CSim_VERSION_MINOR@
+
+#endif // _CSIM_CONFIG_H_
