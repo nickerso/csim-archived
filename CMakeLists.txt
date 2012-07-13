@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 2.6)
 
 PROJECT(CSim)
+cmake_minimum_required(VERSION 2.8)
 
 # Options
 #OPTION(DEBUG
@@ -190,8 +190,34 @@ SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/version.c
   PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/src
 )
 
+# setting up the rpath options (http://www.cmake.org/Wiki/CMake_RPATH_handling)
+### Must come before setting up the executable??!!
+
+# use, i.e. don't skip the full RPATH for the build tree
+#SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+# when building, don't use the install RPATH already
+# (but later on when installing)
+#SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
+
+#SET(CMAKE_INSTALL_RPATH "\$ORIGIN/")
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+#SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH false)
+
+# For Apple set the icns file containing icons
+if(APPLE)
+  # set how it shows up in the Info.plist file
+  set(MACOSX_BUNDLE_ICON_FILE QtTest.icns) 
+  # set where in the bundle to put the icns file
+  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/QtTest.icns
+      PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+  # include the icns file in the target
+  set(CSim_SRCS ${CSim_SRCS} ${CMAKE_CURRENT_SOURCE_DIR}/QtTest.icns)
+ENDIF(APPLE)
+
 set(EXECUTABLE_NAME "csim")
-ADD_EXECUTABLE(${EXECUTABLE_NAME} ${CSim_SRCS} ${CMAKE_BINARY_DIR}/version.c)
+ADD_EXECUTABLE(${EXECUTABLE_NAME} MACOSX_BUNDLE WIN32 ${CSim_SRCS} ${CMAKE_BINARY_DIR}/version.c)
 TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME}
   ${REQ_CLANG_LIBRARIES}
   ${REQ_LLVM_LIBRARIES}
@@ -202,47 +228,71 @@ TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME}
   ${ZLIB_LIBRARIES}
   ${PLATFORM_LIBS}
 )
+# need this to get things working on Linux?
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+    INSTALL_RPATH "\$ORIGIN"
+)
 
-# Install the build application
-install(TARGETS ${EXECUTABLE_NAME} DESTINATION bin)
-# need to install the CellML libraries as well
-function (install_libraries)
-  if (UNIX)
-    # OSX and Linux can just install .dylib and .so libraries directly
-    foreach(file ${ARGV})
-        install(FILES ${file} DESTINATION bin)
-        #message(STATUS "installing ${file} into bin")
-    endforeach()
-  elseif(WIN32)
-    # need to map from .lib to .dll
-    foreach(file ${ARGV})
-      get_filename_component(dir ${file} PATH)
-      get_filename_component(name_without_extension ${file} NAME_WE)
-      set(install_library "${dir}/${name_without_extension}.dll")
-      install (FILES ${install_library} DESTINATION bin)
-      #message(STATUS "installing DLL: ${install_library}")
-    endforeach ()
-  endif ()
-endfunction ()
-install_libraries(${CELLML_LIBRARIES})
-install_libraries(${CCGS_LIBRARIES})
-if (WIN32)
-    # also need libxml2 for windows
-    get_filename_component(xml2Dir ${LIBXML2_LIBRARIES} PATH)
-    install(FILES ${xml2Dir}/../bin/libxml2.dll DESTINATION bin)
-    install(FILES ${xml2Dir}/../bin/zlib1.dll DESTINATION bin)
-    install(FILES ${xml2Dir}/../bin/iconv.dll DESTINATION bin)
-endif(WIN32)
-#message(STATUS "CellML libraries: ${CELLML_LIBRARIES}")
-#message(STATUS "CCGS libraries: ${CCGS_LIBRARIES}")
-#message(STATUS "LIBXML2 libraries: ${LIBXML2_LIBRARIES}")
-#message(FATAL_ERROR "all the libraries needed?")
+# Install the built application and required libraries on the various platforms
 
+set(library_dest_dir bin)
+## Need to escape the CMAKE_INSTALL_PREFIX so that it is resolved appropriately when packaging
+set(APPS "\${CMAKE_INSTALL_PREFIX}/bin/${EXECUTABLE_NAME}")
+IF(APPLE)
+  SET(library_dest_dir "\${EXECUTABLE_NAME}.app/Contents/MacOS")
+  SET(APPS "\${CMAKE_INSTALL_PREFIX}/${EXECUTABLE_NAME}.app")
+ENDIF(APPLE)
+IF(WIN32)
+  SET(APPS "\${CMAKE_INSTALL_PREFIX}/bin/${EXECUTABLE_NAME}.exe")
+ENDIF(WIN32)
 
+# Install the application, on Apple, the bundle is at the root of the
+# install tree, and on other platforms it'll go into the bin directory.
+install(TARGETS ${EXECUTABLE_NAME}
+    BUNDLE DESTINATION . COMPONENT Runtime
+    RUNTIME DESTINATION bin COMPONENT Runtime
+)
 
-# CPack packaging
+# Use BundleUtilities to get all other dependencies for the application to work.
+# It takes a bundle or executable along with possible plugins and inspects it
+# for dependencies.  If they are not system dependencies, they are copied.
+
+# directories to look for dependencies
+function(getSearchPath outDir lib)
+    get_filename_component(dir ${lib} PATH)
+    message(STATUS "${outDir} dir = ${dir}")
+    set(${outDir} ${dir})
+    message(STATUS "${outDir} dir = ${dir}")
+endfunction(getSearchPath)
+list(GET CELLML_LIBRARIES 0 cellmlLib)
+get_filename_component(CELLML_SEARCH_DIR ${cellmlLib} PATH)
+list(GET CCGS_LIBRARIES 0 ccgsLib)
+get_filename_component(CCGS_SEARCH_DIR ${ccgsLib} PATH)
+list(GET LIBXML2_LIBRARIES 0 xml2Lib)
+get_filename_component(LIBXML2_SEARCH_DIR ${xml2Lib} PATH)
+set(LIBXML2_BIN_DIR ${LIBXML2_SEARCH_DIR}/../bin)
+set(DIRS 
+    ${CELLML_SEARCH_DIR}
+    ${CCGS_SEARCH_DIR}
+    ${LIBXML2_SEARCH_DIR}
+    ${LIBXML2_BIN_DIR}
+)
+message(STATUS "DIRS = ${DIRS}")
+
+# Now the work of copying dependencies into the bundle/package
+# The quotes are escaped and variables to use at install time have their $ escaped
+# An alternative is the do a configure_file() on a script and use install(SCRIPT  ...).
+INSTALL(CODE "
+    include(BundleUtilities)
+    fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")
+    " COMPONENT Runtime)
+
+# To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
+# where CPackConfig.cmake is created by including CPack
+# And then there's ways to customize this as well
 include(InstallRequiredSystemLibraries)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_VERSION_MAJOR "${CSim_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${CSim_VERSION_MINOR}")
+set(CPACK_BINARY_DRAGNDROP ON)
 include(CPack)
