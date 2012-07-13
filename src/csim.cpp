@@ -229,8 +229,14 @@ int main(int argc, char* argv[])
 
 	if (debugLevel() > 98)
 	{
-		if (inputURI) DEBUG(99, "main", "inputURI found and is: %s\n", inputURI);
-		else DEBUG(99, "main", "inputURI not found\n");
+		if (inputURI)
+		{
+			DEBUG(99, "main", "inputURI found and is: %s\n", inputURI);
+		}
+		else
+		{
+			DEBUG(99, "main", "inputURI not found\n");
+		}
 	}
 
 	/* Check required arguments */
