@@ -2,6 +2,14 @@
 PROJECT(CSim)
 cmake_minimum_required(VERSION 2.8)
 
+# By default, do not warn when built on machines using only VS Express.
+# and need to let people know to install Microsoft Visual C++ 2010 Redistributable Package
+# before running, if required...(http://www.microsoft.com/en-us/download/details.aspx?id=5555)
+IF(NOT DEFINED CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_NO_WARNINGS)
+    SET(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_NO_WARNINGS ON)
+ENDIF()
+include(InstallRequiredSystemLibraries)
+
 # Options
 #OPTION(DEBUG
 #  "Build this project with debugging turned on (default)"
@@ -290,7 +298,6 @@ INSTALL(CODE "
 # To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
 # where CPackConfig.cmake is created by including CPack
 # And then there's ways to customize this as well
-include(InstallRequiredSystemLibraries)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_VERSION_MAJOR "${CSim_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${CSim_VERSION_MINOR}")
