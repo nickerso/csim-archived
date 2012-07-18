@@ -27,6 +27,7 @@ endif()
 # Set version information in a config.h file
 set(CSim_VERSION_MAJOR 0)
 set(CSim_VERSION_MINOR 4)
+set(CSim_VERSION_PATCH 1)
 configure_file(
   "${PROJECT_SOURCE_DIR}/src/csim-config.h.in"
   "${PROJECT_BINARY_DIR}/csim-config.h"
@@ -304,5 +305,6 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
 
 set(CPACK_PACKAGE_VERSION_MAJOR "${CSim_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${CSim_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${CSim_VERSION_PATCH}")
 set(CPACK_BINARY_DRAGNDROP ON)
 include(CPack)

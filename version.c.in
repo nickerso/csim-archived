@@ -20,7 +20,7 @@ static char* SundialsVersion = "/*SUNDIALS_VERSION*/";
 char* getVersion(const char* tool,const char* toolVersion)
 {
   char* string = (char*)malloc(strlen("CSim XXX.XXX  "));
-  sprintf(string, "CSim %d.%d", CSim_VERSION_MAJOR, CSim_VERSION_MINOR);
+  sprintf(string, "CSim %d.%d.%d", CSim_VERSION_MAJOR, CSim_VERSION_MINOR, CSim_VERSION_PATCH);
   if (tool)
   {
     string = vstrcat(string," (",tool,(char*)NULL);
