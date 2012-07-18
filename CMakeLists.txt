@@ -298,7 +298,10 @@ INSTALL(CODE "
 # To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
 # where CPackConfig.cmake is created by including CPack
 # And then there's ways to customize this as well
+
+# License file for the project, used by the STGZ, NSIS, and PackageMaker generators.
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
+
 set(CPACK_PACKAGE_VERSION_MAJOR "${CSim_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${CSim_VERSION_MINOR}")
 set(CPACK_BINARY_DRAGNDROP ON)
