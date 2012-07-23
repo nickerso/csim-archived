@@ -27,7 +27,7 @@ endif()
 # Set version information in a config.h file
 set(CSim_VERSION_MAJOR 0)
 set(CSim_VERSION_MINOR 4)
-set(CSim_VERSION_PATCH 1)
+set(CSim_VERSION_PATCH 2)
 configure_file(
   "${PROJECT_SOURCE_DIR}/src/csim-config.h.in"
   "${PROJECT_BINARY_DIR}/csim-config.h"
@@ -140,7 +140,9 @@ if (WIN32)
 else(WIN32)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
     add_definitions(-Wall -Werror)
-    set(PLATFORM_LIBS ${PLATFORM_LIBS} "lapack" "blas" "m")
+    # TODO: need a way to determine when lapack and blas are required.
+    #set(PLATFORM_LIBS ${PLATFORM_LIBS} "lapack" "blas" "m")
+    set(PLATFORM_LIBS ${PLATFORM_LIBS} "m")
 endif(WIN32)
 ADD_DEFINITIONS(
    ${LIBXML2_DEFINITIONS}
