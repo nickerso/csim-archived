@@ -18,22 +18,12 @@ extern "C"
 }
 #endif
 
-enum VariableType
-{
-	UNKNOWN_VARIABLE_TYPE = 0,
-	BOUND_VARIABLE,
-	STATE_VARIABLE,
-	ALGEBRAIC_VARIABLE
-};
-
 class OutputVariable
 {
 public:
 	OutputVariable()
 	{
 		column = -1;
-		type = UNKNOWN_VARIABLE_TYPE;
-		arrayIndex = -1;
 	}
 	// the name of the component in the top level model to output
 	std::string component;
@@ -41,10 +31,6 @@ public:
 	std::string variable;
 	// the column to store this variable in the output data
 	int column;
-	// the type array the variable is in
-	enum VariableType type;
-	// the index of the variable in the simulation data array for that type
-	int arrayIndex;
 };
 
 typedef std::vector<OutputVariable> OutputVariables;
