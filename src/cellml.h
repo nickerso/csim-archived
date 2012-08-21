@@ -10,12 +10,19 @@ extern "C"
   /* A basic object to provide a C interface to the CellML API */
   struct CellMLModel;
   struct CellMLModel* CreateCellMLModel(const char* url);
+  struct CellMLModel* CreateCellMLModelFromString(const char* modelString);
   int DestroyCellMLModel(struct CellMLModel** model);
   struct CellMLModel* cellMLModelClone(const struct CellMLModel* src);
   char* getCellMLModelId(const struct CellMLModel* model);
   char* getCellMLModelURI(const struct CellMLModel* model);
   char* getCellMLModelAsCCode(struct CellMLModel* model, void* outputVariables, int debugCode);
   void annotateCellMLModelOutputs(struct CellMLModel* model, void* outputVariables);
+  /**
+   * Create an output variable list containing all variables in the top-level model - i.e., all
+   * variables in the model which can be addressed using XPath (from SED-ML).
+   */
+  void* createOutputVariablesForAllLocalComponents(struct CellMLModel* model);
+
 #if defined (OLD_CODE)
   int cellmlModelSetVariableInitialValue(struct CellMLModel* model,
     const char* component,const char* variable,const char* value);

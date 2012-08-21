@@ -181,6 +181,26 @@ SET(CSim_SRCS
   src/csim.cpp
 )
 
+SET(libCSim_SRCS
+  src/utils.c
+  src/timer.c
+  src/cellml.cpp
+  src/cellml-utils.cpp
+  src/CellmlCode.cpp
+  src/integrator.cpp
+  src/ccgs_required_functions.cpp
+  src/simulation.c
+  src/xpath.c
+  src/outputVariables.cpp
+  src/ModelCompiler.cpp
+  src/ExecutableModel.cpp
+  src/CellmlSimulator.cpp
+)
+
+SET(libCSim_PUBLIC_API
+  src/CellmlSimulator.hpp
+)
+
 # Special treatment for generating and compiling version.c
 ## assume no perl on windows and simply copy the file over.
 ## FIXME: need to migrate away from this perl script (and subversion)
@@ -244,6 +264,24 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
     INSTALL_RPATH "\$ORIGIN"
 )
 
+# the library version of CSim
+set(CSIM_LIBRARY_NAME "CSimLibrary")
+add_library(${CSIM_LIBRARY_NAME} SHARED ${libCSim_SRCS})
+TARGET_LINK_LIBRARIES(${CSIM_LIBRARY_NAME}
+  ${REQ_CLANG_LIBRARIES}
+  ${REQ_LLVM_LIBRARIES}
+  ${CELLML_LIBRARIES}
+  ${CCGS_LIBRARIES}
+  ${CVODES_LIBRARIES}
+  ${LIBXML2_LIBRARIES}
+  ${ZLIB_LIBRARIES}
+  ${PLATFORM_LIBS}
+)
+set_target_properties(${CSIM_LIBRARY_NAME} PROPERTIES
+    OUTPUT_NAME csim
+    VERSION "${CSim_VERSION_MAJOR}.${CSim_VERSION_MINOR}.${CSim_VERSION_PATCH}"
+)
+
 # Install the built application and required libraries on the various platforms
 
 set(library_dest_dir bin)
@@ -262,6 +300,16 @@ ENDIF(WIN32)
 install(TARGETS ${EXECUTABLE_NAME}
     BUNDLE DESTINATION . COMPONENT Runtime
     RUNTIME DESTINATION bin COMPONENT Runtime
+)
+
+# Install the library and public headers
+install(TARGETS ${CSIM_LIBRARY_NAME}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION lib
+)
+INSTALL( FILES ${libCSim_PUBLIC_API}
+    DESTINATION include
 )
 
 # Use BundleUtilities to get all other dependencies for the application to work.

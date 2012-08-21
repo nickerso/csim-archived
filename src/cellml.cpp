@@ -964,6 +964,58 @@ CreateCellMLModel(const char* mbrurl)
   return(model);
 }
 
+struct CellMLModel*
+CreateCellMLModelFromString(const char* modelString)
+{
+  wchar_t* str = string2wstring(modelString);
+
+  if (!str) return((struct CellMLModel*)NULL);
+  DEBUG(9,"CreateCellMLModelFromString","model string: %S\n", str);
+
+  struct CellMLModel* model =
+    (struct CellMLModel*)malloc(sizeof(struct CellMLModel));
+
+  // Need a CellML bootstrap to create the model loader
+  iface::cellml_api::CellMLBootstrap* cb =
+    CreateCellMLBootstrap();
+  iface::cellml_api::ModelLoader* ml =
+    cb->modelLoader();
+  cb->release_ref();
+
+  // Try and load the CellML model from the URL
+  try
+  {
+    model->model = ml->createFromText(str);
+    /* and make sure it is fully instantiated */
+    model->model->fullyInstantiateImports();
+  }
+  catch (...)
+  {
+    fprintf(stderr,"Error loading model from string: %S\n", str);
+    free(str);
+    ml->release_ref();
+    //free(model->uri);
+    free(model);
+    return((struct CellMLModel*)NULL);
+  }
+  // finished with the model loader now
+  ml->release_ref();
+  model->annotationSet = 0;
+  /* create an AnnotationSet for use in keeping links between math and variable objects */
+  RETURN_INTO_OBJREF(ats, iface::cellml_services::AnnotationToolService,
+		  CreateAnnotationToolService());
+  model->annotationSet = ats->createAnnotationSet();
+  DEBUG(0, "CreateCellMLModel", "Created the annotation set\n");
+  free(str);
+
+  // grab the xml:base and set it as the model URI
+  RETURN_INTO_OBJREF(uri, iface::cellml_api::URI, model->model->xmlBase());
+  RETURN_INTO_WSTRING(xmlBase, uri->asText());
+  model->uri = wstring2string(xmlBase.c_str());
+
+  return(model);
+}
+
 int DestroyCellMLModel(struct CellMLModel** model)
 {
   if (*model)
@@ -1590,4 +1642,36 @@ void annotateCellMLModelOutputs(struct CellMLModel* model, void* outputVariables
 			}
 		}
 	}
+}
+
+void* createOutputVariablesForAllLocalComponents(struct CellMLModel* model)
+{
+	void* list = outputVariablesCreate();
+	RETURN_INTO_OBJREF(localComponents, iface::cellml_api::CellMLComponentSet,
+			model->model->localComponents());
+	RETURN_INTO_OBJREF(iter, iface::cellml_api::CellMLComponentIterator,
+			localComponents->iterateComponents());
+	int columnIndex = 1;
+	while (true)
+	{
+		RETURN_INTO_OBJREF(component, iface::cellml_api::CellMLComponent, iter->nextComponent());
+		if (component == NULL) break;
+		RETURN_INTO_WSTRING(cname, component->name());
+		RETURN_INTO_STRING(ccname, wstring2string(cname.c_str()));
+		RETURN_INTO_OBJREF(variables, iface::cellml_api::CellMLVariableSet, component->variables());
+		RETURN_INTO_OBJREF(viter, iface::cellml_api::CellMLVariableIterator, variables->iterateVariables());
+		while (true)
+		{
+			RETURN_INTO_OBJREF(variable, iface::cellml_api::CellMLVariable, viter->nextVariable());
+			if (variable == NULL) break;
+			RETURN_INTO_WSTRING(vname, variable->name());
+			RETURN_INTO_STRING(cvname, wstring2string(vname.c_str()));
+			std::string variableId = ccname;
+			variableId += ".";
+			variableId += cvname;
+			outputVariablesAppendVariable(list, ccname.c_str(), cvname.c_str(), columnIndex);
+			++columnIndex;
+		}
+	}
+	return list;
 }

@@ -1,0 +1,22 @@
+$ csharp
+Mono C# Shell, type "help;" for help
+
+Enter statements below.
+csharp> using System;
+csharp> using System.IO;
+csharp> LoadAssembly("/Applications/SBW/lib/SBWCSharp.dll");
+csharp> using SBW;
+csharp> var module = new SBW.Module("edu.caltech.cellmlsbw");
+csharp> var service = module.getService("cellmlsbw");
+
+csharp> service.getMethod("void loadCellMl(string)").Call("Hello World");
+csharp> service.getMethod("string simulate(double,double,double,int)").Call(0.0, 0.0, 10.0, 100).getString();
+"the same results as obtained / written to file before"
+csharp> service.getMethod("string[] getVariables()").Call().get1DStringArray();
+{ "component.time", "component.A" }
+csharp> service.getMethod("double[] getValues()").Call().get1DDoubleArray();    
+{ 1.1, 2.1 }
+
+
+csharp> service.getMethod("string serialiseCellmlFromUrl(string)").Call("http://bobby.com/3.xml").getString(); 
+csharp> service.getMethod("string serialiseCellmlFromUrl(string)").Call("http://models.cellml.org/w/andre/sine/rawfile/293afb20feb51d1739b6645eaf2cd18b1a4f3bcb/sin_approximations_import.xml").getString();

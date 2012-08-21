@@ -39,12 +39,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
+#include <string>
 
 #include <IfaceCellML_APISPEC.hxx>
 #include <CellMLBootstrap.hpp>
 #include <cellml-api-cxx-support.hpp>
 
 #include "cellml-utils.h"
+#include "cellml-utils.hpp"
 #include "utils.hxx"
 
 #ifdef __cplusplus
@@ -264,3 +266,43 @@ static int updateVariableInitialValue(iface::cellml_api::Model* model,
   return(code);
 }
 #endif
+
+std::string modelUrlToString(const std::string& url)
+{
+	std::string modelString("");
+
+  // Get the URL from which to load the model
+  wchar_t* URL = string2wstring(url.c_str());
+
+  if (!URL) return(modelString);
+  DEBUG(2,"serialiseCellmlFromUrl","model URI: %S\n",URL);
+
+  RETURN_INTO_OBJREF(cb,iface::cellml_api::CellMLBootstrap,
+    CreateCellMLBootstrap());
+  RETURN_INTO_OBJREF(ml,iface::cellml_api::ModelLoader,cb->modelLoader());
+
+  iface::cellml_api::Model* model = (iface::cellml_api::Model*)NULL;
+  // Try and load the CellML model from the URL
+  try
+  {
+    model = ml->loadFromURL(URL);
+  }
+  catch (...)
+  {
+    ERROR("serialiseCellmlFromUrl",
+      "Error loading model URL: %S\n",URL);
+    free(URL);
+    return(modelString);
+  }
+
+  // set the xml:base
+  RETURN_INTO_OBJREF(uri,iface::cellml_api::URI,model->xmlBase());
+  uri->asText(URL);
+  free(URL);
+
+  RETURN_INTO_WSTRING(ms, model->serialisedText());
+  RETURN_INTO_STRING(mss, wstring2string(ms.c_str()));
+
+  model->release_ref();
+  return(mss);
+}
