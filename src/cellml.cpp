@@ -39,6 +39,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <sstream>
 #include <string.h>
 #include <cwchar>
 #include <vector>
@@ -74,6 +75,33 @@ struct CellMLModel
   iface::cellml_services::AnnotationSet* annotationSet;
   char* uri;
 };
+
+static std::vector<std::string>&
+splitString(const std::string &s, char delim, std::vector<std::string>& elems)
+{
+	std::stringstream ss(s);
+	std::string item;
+	while(std::getline(ss, item, delim))
+	{
+		elems.push_back(item);
+	}
+	return elems;
+}
+
+static std::vector<int>
+splitIntString(const std::string& s)
+{
+	std::vector<int> ints;
+	std::vector<std::string> elements;
+	elements = splitString(s, ',', elements);
+	int i;
+	for (i=0; i<elements.size(); i++)
+	{
+		int c = strtol(elements[i].c_str(), NULL, /*base 10*/10);
+		ints.push_back(c);
+	}
+	return ints;
+}
 
 static std::wstring
 formatNumber(const int value)
@@ -662,35 +690,42 @@ static std::wstring writeOutputFunction(iface::cellml_services::CodeInformation*
 		if (column.length() > 0)
 		{
 			RETURN_INTO_STRING(col, wstring2string(column.c_str()));
-			int c = strtol(col.c_str(), NULL, /*base 10*/10);
+			// need to check for multiple outputs of the same source variable
+			std::vector<int> indices = splitIntString(col);
 			// FIXME: assume this always works since we set the annotation...
-			code += L"outputs[";
-			code += formatNumber(c-1);
-			code += L"] = ";
-			switch (ct->type())
+			int i;
+			for (i=0; i< indices.size(); i++)
 			{
-			case iface::cellml_services::STATE_VARIABLE:
-				code += L"STATES[";
-				break;
-			case iface::cellml_services::ALGEBRAIC:
-				code += L"ALGEBRAIC[";
-				break;
-			case iface::cellml_services::CONSTANT:
-				code += L"CONSTANT[";
-				break;
-			case iface::cellml_services::VARIABLE_OF_INTEGRATION:
-				code += L"VOI";
-				break;
-			default:
-				code += L"Should never see this";
-				break;
+				std::wcout << L"output variable[" << indices[i] << L"] for column: " << column.c_str()
+						<< std::endl;
+				code += L"outputs[";
+				code += formatNumber(indices[i]-1);
+				code += L"] = ";
+				switch (ct->type())
+				{
+				case iface::cellml_services::STATE_VARIABLE:
+					code += L"STATES[";
+					break;
+				case iface::cellml_services::ALGEBRAIC:
+					code += L"ALGEBRAIC[";
+					break;
+				case iface::cellml_services::CONSTANT:
+					code += L"CONSTANT[";
+					break;
+				case iface::cellml_services::VARIABLE_OF_INTEGRATION:
+					code += L"VOI";
+					break;
+				default:
+					code += L"Should never see this";
+					break;
+				}
+				if (ct->type() != iface::cellml_services::VARIABLE_OF_INTEGRATION)
+				{
+					code += formatNumber(ct->assignedIndex());
+					code += L"]";
+				}
+				code += L";\n";
 			}
-			if (ct->type() != iface::cellml_services::VARIABLE_OF_INTEGRATION)
-			{
-				code += formatNumber(ct->assignedIndex());
-				code += L"]";
-			}
-			code += L";\n";
 		}
 	}
 	code += L"\n}\n";
@@ -1636,9 +1671,21 @@ void annotateCellMLModelOutputs(struct CellMLModel* model, void* outputVariables
 				DEBUG(0, "annotateCellMLModelOutputs", "Got the variable: %s\n", outputVariablesGetVariable(outputVariables, i));
 				RETURN_INTO_OBJREF(src, iface::cellml_api::CellMLVariable, variable->sourceVariable());
 				DEBUG(0, "annotateCellMLModelOutputs", "Got the source variable\n");
+				RETURN_INTO_WSTRING(currentAnnotation, model->annotationSet->getStringAnnotation(src,
+						L"CSim::OutputColumn"));
 				wchar_t column[128];
-				swprintf(column, 128, L"%d\0", outputVariablesGetColumn(outputVariables, i));
-				model->annotationSet->setStringAnnotation(src, L"CSim::OutputColumn", column);
+				if (currentAnnotation.length() > 0)
+				{
+					swprintf(column, 128, L",%d\0", outputVariablesGetColumn(outputVariables, i));
+					currentAnnotation += std::wstring(column);
+				}
+				else
+				{
+					swprintf(column, 128, L"%d\0", outputVariablesGetColumn(outputVariables, i));
+					currentAnnotation = std::wstring(column);
+				}
+				model->annotationSet->setStringAnnotation(src, L"CSim::OutputColumn",
+						currentAnnotation.c_str());
 			}
 		}
 	}
