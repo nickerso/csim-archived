@@ -44,10 +44,15 @@ void CellmlSbw::loadCellml(const std::string & cellmlModelString)
 	// as outputs.
 	if (csim->createSimulationDefinition() != 0)
 	{
-		std::cerr << "CelllmlSbw::loadCellml: Error creating the simulation definition." << std::endl;
+		std::cerr << "CellmlSbw::loadCellml: Error creating the simulation definition." << std::endl;
 		return;
 	}
 	// generate the code
+	if (csim->generateCode() != 0)
+	{
+		std::cerr << "CellmlSbw::loadCellml: Error generating code." << std::endl;
+		return;
+	}
 	// create output variables for all variables in the top-level model
 	// use the getOutputs method to get the values to return in getValues
 	std::cout << "Loaded the model and did stuff successfully :)" << std::endl;

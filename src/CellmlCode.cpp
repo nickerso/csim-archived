@@ -70,6 +70,46 @@ CellmlCode::~CellmlCode()
 	}
 }
 
+int CellmlCode::createCodeForSimulation(struct CellMLModel* model, struct Simulation* simulation,
+		bool generateDebugCode)
+{
+	int returnCode = 0;
+	if (model && simulation)
+	{
+		mCodeFileExists = false;
+		annotateCellMLModelOutputs(model,
+				simulationGetOutputVariables(simulation));
+		/* generate some code */
+		char* code_string = getCellMLModelAsCCode(model,
+				simulationGetOutputVariables(simulation), generateDebugCode);
+		if (code_string)
+		{
+			DEBUG(1, "CellmlCode::createCodeForSimulation(model,simulation)",
+					"Successfully generated code from CellML model\n");
+			/* We have code, so dump it out to a temporary file in a temporary
+			 directory so we can have the compiled object nice and handy to
+			 delete */
+			char fileTemplate[64] = "tmp.cellml2code.XXXXXX";
+			int tmpFileDes = mkstemp(fileTemplate);
+			mCodeFileName = std::string(fileTemplate);
+			mCodeFileExists = true;
+			FILE* cFile = fdopen(tmpFileDes, "w");
+			fprintf(cFile, "%s", code_string);
+			fclose(cFile);
+			free(code_string);
+		}
+		else
+		{
+			ERROR("CellmlCode::createCodeForSimulation(model,simulation)",
+					"Error generating code from the CellML model\n");
+			returnCode = -1;
+		}
+	}
+	else DEBUG(0, "CellmlCode::createCodeForSimulation(model,simulation)",
+			"Invalid arguments\n");
+	return (returnCode);
+}
+
 int CellmlCode::createCodeForSimulation(struct Simulation* simulation, bool generateDebugCode)
 {
 	int returnCode = 0;
@@ -81,35 +121,15 @@ int CellmlCode::createCodeForSimulation(struct Simulation* simulation, bool gene
 		struct CellMLModel* cellmlModel = CreateCellMLModel(modelUri);
 		if (cellmlModel)
 		{
-			annotateCellMLModelOutputs(cellmlModel, simulationGetOutputVariables(simulation));
-			/* generate some code */
-			char* code_string = getCellMLModelAsCCode(cellmlModel,
-					simulationGetOutputVariables(simulation),
-					generateDebugCode);
-			if (code_string)
-			{
-				DEBUG(1,"CreateCode",
-						"Successfully generated code from CellML model\n");
-				/* We have code, so dump it out to a temporary file in a temporary
-           	   	   directory so we can have the compiled object nice and handy to
-           	   	   delete */
-				char fileTemplate[64] = "tmp.cellml2code.XXXXXX";
-				int tmpFileDes = mkstemp(fileTemplate);
-				mCodeFileName = std::string(fileTemplate);
-				mCodeFileExists = true;
-				FILE* cFile = fdopen(tmpFileDes,"w");
-				fprintf(cFile,"%s",code_string);
-				fclose(cFile);
-				free(code_string);
-			}
-			else
-			{
-				ERROR("CreateCode","Error generating code from the CellML model\n");
-				returnCode = -1;
-			}
+			createCodeForSimulation(cellmlModel, simulation, generateDebugCode);
 			DestroyCellMLModel(&cellmlModel);
 		}
+		else
+		{
+			ERROR("CellmlCode::createCodeForSimulation(simulation)","Unable to parse model.\n");
+			returnCode = -1;
+		}
 	}
-	else DEBUG(0,"CreateCode","Invalid arguments\n");
+	else DEBUG(0,"CellmlCode::createCodeForSimulation(simulation)","Invalid arguments\n");
 	return(returnCode);
 }

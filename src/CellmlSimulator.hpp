@@ -10,6 +10,7 @@
 
 struct CellMLModel;
 struct Simulation;
+class CellmlCode;
 
 class CellmlSimulator
 {
@@ -34,10 +35,17 @@ public:
 	 */
 	int createSimulationDefinition();
 
+	/**
+	 * Generate the code ready for executing the model description. Return 0 on success.
+	 * FIXME: could propagate debug switch and saving generated file?
+	 */
+	int generateCode();
+
 private:
 	std::string mUrl;
 	struct CellMLModel* mModel;
 	struct Simulation* mSimulation;
+	class CellmlCode* mCode;
 };
 
 #endif /* CELLMLSIMULATOR_HPP_ */

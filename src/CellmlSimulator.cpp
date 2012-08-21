@@ -9,6 +9,7 @@
 
 #include "CellmlSimulator.hpp"
 #include "cellml-utils.hpp"
+#include "CellmlCode.hpp"
 
 #ifdef __cplusplus
 extern "C"
@@ -22,7 +23,7 @@ extern "C"
 #endif
 
 CellmlSimulator::CellmlSimulator() :
-	mModel(NULL), mSimulation(NULL)
+	mModel(NULL), mSimulation(NULL), mCode(NULL)
 {
 	std::cout << "Creating cellml simulator." << std::endl;
 }
@@ -32,6 +33,7 @@ CellmlSimulator::~CellmlSimulator()
 	std::cout << "Destroying cellml simulator for model url: " << mUrl.c_str() << std::endl;
 	if (mModel) DestroyCellMLModel(&mModel);
 	if (mSimulation) DestroySimulation(&mSimulation);
+	if (mCode) delete mCode;
 }
 
 std::string CellmlSimulator::serialiseCellmlFromUrl(const std::string& url)
@@ -89,5 +91,19 @@ int CellmlSimulator::createSimulationDefinition()
 		mSimulation = NULL;
 		return -2;
 	}
+	return 0;
+}
+
+int CellmlSimulator::generateCode()
+{
+	if (!mModel || !mSimulation)
+	{
+		std::cerr << "CellmlSimulator::generateCode: Error, need a model and simulation definition before "
+				"generating code." << std::endl;
+		return -1;
+	}
+	mCode = new CellmlCode();
+	mCode->createCodeForSimulation(mModel, mSimulation, /*generateDebugCode*/false);
+
 	return 0;
 }

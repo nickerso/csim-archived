@@ -9,6 +9,7 @@
 #define CELLMLCODE_HPP_
 
 struct Simulation;
+struct CellMLModel;
 
 class CellmlCode
 {
@@ -18,6 +19,8 @@ public:
 	~CellmlCode();
 
 	int createCodeForSimulation(struct Simulation* simulation, bool generateDebugCode = false);
+	int createCodeForSimulation(struct CellMLModel* model, struct Simulation* simulation,
+			bool generateDebugCode = false);
 
 	const char* const codeFileName()
 	{
