@@ -696,22 +696,27 @@ static std::wstring writeOutputFunction(iface::cellml_services::CodeInformation*
 			int i;
 			for (i=0; i< indices.size(); i++)
 			{
+				int outputVariableIndex = indices[i] - 1;
 				code += L"outputs[";
-				code += formatNumber(indices[i]-1);
+				code += formatNumber(outputVariableIndex);
 				code += L"] = ";
 				switch (ct->type())
 				{
 				case iface::cellml_services::STATE_VARIABLE:
 					code += L"STATES[";
+					outputVariablesSetCodeArray(outputVariables, outputVariableIndex, STATE_ARRAY);
 					break;
 				case iface::cellml_services::ALGEBRAIC:
 					code += L"ALGEBRAIC[";
+					outputVariablesSetCodeArray(outputVariables, outputVariableIndex, ALGEBRAIC_ARRAY);
 					break;
 				case iface::cellml_services::CONSTANT:
 					code += L"CONSTANTS[";
+					outputVariablesSetCodeArray(outputVariables, outputVariableIndex, CONSTANT_ARRAY);
 					break;
 				case iface::cellml_services::VARIABLE_OF_INTEGRATION:
 					code += L"VOI";
+					outputVariablesSetCodeArray(outputVariables, outputVariableIndex, VOI_ARRAY);
 					break;
 				default:
 					code += L"Should never see this";
@@ -720,6 +725,7 @@ static std::wstring writeOutputFunction(iface::cellml_services::CodeInformation*
 				if (ct->type() != iface::cellml_services::VARIABLE_OF_INTEGRATION)
 				{
 					code += formatNumber(ct->assignedIndex());
+					outputVariablesSetCodeIndex(outputVariables, outputVariableIndex, ct->assignedIndex());
 					code += L"]";
 				}
 				code += L";\n";

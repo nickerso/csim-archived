@@ -24,6 +24,8 @@ public:
 	OutputVariable()
 	{
 		column = -1;
+		codeArray = UNKNOWN_ARRAY;
+		codeIndex = -1;
 	}
 	// the name of the component in the top level model to output
 	std::string component;
@@ -31,6 +33,10 @@ public:
 	std::string variable;
 	// the column to store this variable in the output data
 	int column;
+	// the array for this variable in the generated code
+	enum VariableCodeArray codeArray;
+	// the index of this variable in the codeArray
+	int codeIndex;
 };
 
 typedef std::vector<OutputVariable> OutputVariables;
@@ -98,4 +104,28 @@ int outputVariablesGetColumn(void* outputVariables, int index)
 {
 	OutputVariables* list = static_cast<OutputVariables*>(outputVariables);
 	return (*list)[index].column;
+}
+
+enum VariableCodeArray outputVariablesGetCodeArray(void* outputVariables, int index)
+{
+	OutputVariables* list = static_cast<OutputVariables*>(outputVariables);
+	return (*list)[index].codeArray;
+}
+
+void outputVariablesSetCodeArray(void* outputVariables, int index, enum VariableCodeArray array)
+{
+	OutputVariables* list = static_cast<OutputVariables*>(outputVariables);
+	(*list)[index].codeArray = array;
+}
+
+int outputVariablesGetCodeIndex(void* outputVariables, int index)
+{
+	OutputVariables* list = static_cast<OutputVariables*>(outputVariables);
+	return (*list)[index].codeIndex;
+}
+
+void outputVariablesSetCodeIndex(void* outputVariables, int index, int codeIndex)
+{
+	OutputVariables* list = static_cast<OutputVariables*>(outputVariables);
+	(*list)[index].codeIndex = codeIndex;
 }

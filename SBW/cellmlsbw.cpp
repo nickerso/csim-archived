@@ -72,10 +72,16 @@ void CellmlSbw::reset()
 	}
 	std::cout << "Success in resetting the model." << std::endl;
 }
-// this method sets the value of the given component id (component.variable) to the given value
-void CellmlSbw::setValue(const std::string& componentId, double value)
+// this method sets the value of the given variable id (component.variable) to the given value
+void CellmlSbw::setValue(const std::string& variableId, double value)
 {
-
+	if (csim->setVariableValue(variableId, value) != 0)
+	{
+		std::cerr << "CellmlSbw::setValue: Error setting the value of the variable: "
+				<< variableId.c_str() << std::endl;
+		return;
+	}
+	std::cout << "Success in setting the value of the variable: " << variableId.c_str() << std::endl;
 }
 
 // this method returns all variables as vector with elements of format component.variable

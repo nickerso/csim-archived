@@ -54,6 +54,11 @@ public:
 	 */
 	int updateModelFromCheckpoint();
 
+	/**
+	 * Set the value of the given variable (component.variable) to the specified value. Return 0 on success.
+	 */
+	int setVariableValue(const std::string& variableId, double value);
+
 private:
 	std::string mUrl;
 	std::vector<std::string> mVariableIds;

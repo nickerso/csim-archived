@@ -181,3 +181,54 @@ int CellmlSimulator::updateModelFromCheckpoint()
 	memcpy(mExecutableModel->outputs, mOutputsCache, sizeof(double)*mExecutableModel->nOutputs);
 	return 0;
 }
+
+int CellmlSimulator::setVariableValue(const std::string& variableId, double value)
+{
+	if (!mExecutableModel)
+	{
+		std::cerr << "CellmlSimulator::setVariableValue: Error, need to compile the model before "
+				"setting the value of any variable." << std::endl;
+		return -1;
+	}
+	std::vector<std::string>::const_iterator iter = mVariableIds.begin();
+	int variableIndex = -1, i = 0;
+	while (iter != mVariableIds.end())
+	{
+		if (*iter == variableId)
+		{
+			variableIndex = i;
+			break;
+		}
+		++i;
+		++iter;
+	}
+	if (variableIndex > -1)
+	{
+		enum VariableCodeArray array = outputVariablesGetCodeArray(simulationGetOutputVariables(mSimulation),
+				variableIndex);
+		int index = outputVariablesGetCodeIndex(simulationGetOutputVariables(mSimulation),
+				variableIndex);
+		switch (array)
+		{
+		case VOI_ARRAY:
+			mExecutableModel->bound[0] = value;
+			break;
+		case STATE_ARRAY:
+			mExecutableModel->states[index] = value;
+			break;
+		case ALGEBRAIC_ARRAY:
+			mExecutableModel->algebraic[index] = value;
+			break;
+		case CONSTANT_ARRAY:
+			mExecutableModel->constants[index] = value;
+			break;
+		default:
+			std::cerr << "CellmlSimulator::setVariableValue: Error finding the array for variable: "
+				<< variableId.c_str() << std::endl;
+			return -2;
+		}
+		return 0;
+	}
+	return -1;
+}
+
