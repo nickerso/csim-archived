@@ -696,8 +696,6 @@ static std::wstring writeOutputFunction(iface::cellml_services::CodeInformation*
 			int i;
 			for (i=0; i< indices.size(); i++)
 			{
-				std::wcout << L"output variable[" << indices[i] << L"] for column: " << column.c_str()
-						<< std::endl;
 				code += L"outputs[";
 				code += formatNumber(indices[i]-1);
 				code += L"] = ";
@@ -710,7 +708,7 @@ static std::wstring writeOutputFunction(iface::cellml_services::CodeInformation*
 					code += L"ALGEBRAIC[";
 					break;
 				case iface::cellml_services::CONSTANT:
-					code += L"CONSTANT[";
+					code += L"CONSTANTS[";
 					break;
 				case iface::cellml_services::VARIABLE_OF_INTEGRATION:
 					code += L"VOI";

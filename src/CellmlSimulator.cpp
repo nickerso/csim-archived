@@ -10,6 +10,8 @@
 #include "CellmlSimulator.hpp"
 #include "cellml-utils.hpp"
 #include "CellmlCode.hpp"
+#include "ModelCompiler.hpp"
+#include "ExecutableModel.hpp"
 
 #ifdef __cplusplus
 extern "C"
@@ -23,7 +25,7 @@ extern "C"
 #endif
 
 CellmlSimulator::CellmlSimulator() :
-	mModel(NULL), mSimulation(NULL), mCode(NULL)
+	mModel(NULL), mSimulation(NULL), mCode(NULL), mExecutableModel(NULL)
 {
 	std::cout << "Creating cellml simulator." << std::endl;
 }
@@ -34,6 +36,7 @@ CellmlSimulator::~CellmlSimulator()
 	if (mModel) DestroyCellMLModel(&mModel);
 	if (mSimulation) DestroySimulation(&mSimulation);
 	if (mCode) delete mCode;
+	if (mExecutableModel) delete mExecutableModel;
 }
 
 std::string CellmlSimulator::serialiseCellmlFromUrl(const std::string& url)
@@ -94,16 +97,35 @@ int CellmlSimulator::createSimulationDefinition()
 	return 0;
 }
 
-int CellmlSimulator::generateCode()
+int CellmlSimulator::compileModel()
 {
+	int returnCode;
 	if (!mModel || !mSimulation)
 	{
-		std::cerr << "CellmlSimulator::generateCode: Error, need a model and simulation definition before "
-				"generating code." << std::endl;
+		std::cerr << "CellmlSimulator::compileModel: Error, need a model and simulation definition before "
+				"it can be compiled." << std::endl;
 		return -1;
 	}
+
 	mCode = new CellmlCode();
-	mCode->createCodeForSimulation(mModel, mSimulation, /*generateDebugCode*/false);
+	returnCode = mCode->createCodeForSimulation(mModel, mSimulation, /*generateDebugCode*/false);
+	if (returnCode != 0)
+	{
+		std::cerr << "CellmlSimulator::compileModel: Error, unable to generate code to compile."
+				<< std::endl;
+		return -2;
+	}
+
+	// create the LLVM/Clang model compiler
+	ModelCompiler compiler(/*executable name*/"CellmlSimulator", /*verbose*/true, /*debug*/false);
+	// and the executable model
+	mExecutableModel = new ExecutableModel();
+	if (mExecutableModel->initialise(&compiler, mCode->codeFileName(), simulationGetBvarStart(mSimulation)) != 0)
+	{
+		std::cerr << "CellmlSimulator::compileModel: Unable to create the executable model from '"
+				<< mCode->codeFileName() << "'" << std::endl;
+		return -3;
+	}
 
 	return 0;
 }
