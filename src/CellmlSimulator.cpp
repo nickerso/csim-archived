@@ -9,6 +9,7 @@
 
 #include "CellmlSimulator.hpp"
 #include "cellml-utils.hpp"
+#include "cellml.hpp"
 #include "CellmlCode.hpp"
 #include "ModelCompiler.hpp"
 #include "ExecutableModel.hpp"
@@ -25,7 +26,9 @@ extern "C"
 #endif
 
 CellmlSimulator::CellmlSimulator() :
-	mModel(NULL), mSimulation(NULL), mCode(NULL), mExecutableModel(NULL)
+	mModel(NULL), mSimulation(NULL), mCode(NULL), mExecutableModel(NULL),
+	mBoundCache(NULL), mRatesCache(NULL), mStatesCache(NULL), mConstantsCache(NULL),
+	mAlgebraicCache(NULL), mOutputsCache(NULL)
 {
 	std::cout << "Creating cellml simulator." << std::endl;
 }
@@ -37,6 +40,12 @@ CellmlSimulator::~CellmlSimulator()
 	if (mSimulation) DestroySimulation(&mSimulation);
 	if (mCode) delete mCode;
 	if (mExecutableModel) delete mExecutableModel;
+	if (mBoundCache) free(mBoundCache);
+	if (mRatesCache) free(mRatesCache);
+	if (mStatesCache) free(mStatesCache);
+	if (mConstantsCache) free(mConstantsCache);
+	if (mAlgebraicCache) free(mAlgebraicCache);
+	if (mOutputsCache) free(mOutputsCache);
 }
 
 std::string CellmlSimulator::serialiseCellmlFromUrl(const std::string& url)
@@ -80,7 +89,7 @@ int CellmlSimulator::createSimulationDefinition()
 	simulationSetBvarMaxStep(mSimulation, 0.01);
 	simulationSetBvarTabStep(mSimulation, 0.1);
 
-	void* list = createOutputVariablesForAllLocalComponents(mModel);
+	void* list = createOutputVariablesForAllLocalComponents(mModel, mVariableIds);
 	if (list)
 	{
 		simulationSetOutputVariables(mSimulation, list);
@@ -127,5 +136,48 @@ int CellmlSimulator::compileModel()
 		return -3;
 	}
 
+	return 0;
+}
+
+int CellmlSimulator::checkpointModelValues()
+{
+	if (!mExecutableModel)
+	{
+		std::cerr << "CellmlSimulator::checkpointModelValues(): Error, need to compile the model before "
+				"checkpointing." << std::endl;
+		return -1;
+	}
+	if (mBoundCache == NULL)
+	{
+		mBoundCache = (double*)malloc(sizeof(double)*mExecutableModel->nBound);
+		mRatesCache = (double*)malloc(sizeof(double)*mExecutableModel->nRates);
+		mStatesCache = (double*)malloc(sizeof(double)*mExecutableModel->nRates);
+		mConstantsCache = (double*)malloc(sizeof(double)*mExecutableModel->nConstants);
+		mAlgebraicCache = (double*)malloc(sizeof(double)*mExecutableModel->nAlgebraic);
+		mOutputsCache = (double*)malloc(sizeof(double)*mExecutableModel->nOutputs);
+	}
+	memcpy(mBoundCache, mExecutableModel->bound, sizeof(double)*mExecutableModel->nBound);
+	memcpy(mRatesCache, mExecutableModel->rates, sizeof(double)*mExecutableModel->nRates);
+	memcpy(mStatesCache, mExecutableModel->states, sizeof(double)*mExecutableModel->nRates);
+	memcpy(mConstantsCache, mExecutableModel->constants, sizeof(double)*mExecutableModel->nConstants);
+	memcpy(mAlgebraicCache, mExecutableModel->algebraic, sizeof(double)*mExecutableModel->nAlgebraic);
+	memcpy(mOutputsCache, mExecutableModel->outputs, sizeof(double)*mExecutableModel->nOutputs);
+	return 0;
+}
+
+int CellmlSimulator::updateModelFromCheckpoint()
+{
+	if (!mExecutableModel || !mBoundCache)
+	{
+		std::cerr << "CellmlSimulator::updateModelFromCheckpoint: Error, need to compile the model and "
+				"checkpoint the values before updating the model from the checkpoint." << std::endl;
+		return -1;
+	}
+	memcpy(mExecutableModel->bound, mBoundCache, sizeof(double)*mExecutableModel->nBound);
+	memcpy(mExecutableModel->rates, mRatesCache, sizeof(double)*mExecutableModel->nRates);
+	memcpy(mExecutableModel->states, mStatesCache, sizeof(double)*mExecutableModel->nRates);
+	memcpy(mExecutableModel->constants, mConstantsCache, sizeof(double)*mExecutableModel->nConstants);
+	memcpy(mExecutableModel->algebraic, mAlgebraicCache, sizeof(double)*mExecutableModel->nAlgebraic);
+	memcpy(mExecutableModel->outputs, mOutputsCache, sizeof(double)*mExecutableModel->nOutputs);
 	return 0;
 }

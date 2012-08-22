@@ -17,11 +17,6 @@ extern "C"
   char* getCellMLModelURI(const struct CellMLModel* model);
   char* getCellMLModelAsCCode(struct CellMLModel* model, void* outputVariables, int debugCode);
   void annotateCellMLModelOutputs(struct CellMLModel* model, void* outputVariables);
-  /**
-   * Create an output variable list containing all variables in the top-level model - i.e., all
-   * variables in the model which can be addressed using XPath (from SED-ML).
-   */
-  void* createOutputVariablesForAllLocalComponents(struct CellMLModel* model);
 
 #if defined (OLD_CODE)
   int cellmlModelSetVariableInitialValue(struct CellMLModel* model,

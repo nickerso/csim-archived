@@ -53,13 +53,24 @@ void CellmlSbw::loadCellml(const std::string & cellmlModelString)
 		std::cerr << "CellmlSbw::loadCellml: Error compiling model." << std::endl;
 		return;
 	}
+	// checkpoint the model at the initial values to provide the initial "reset" point.
+	if (csim->checkpointModelValues() != 0)
+	{
+		std::cerr << "CellmlSbw::loadCellml: Error checkpointing initial values." << std::endl;
+		return;
+	}
 	std::cout << "Loaded the model and did stuff successfully :)" << std::endl;
 }
 
 // this method resets the simulator back to initial conditions
 void CellmlSbw::reset()
 {
-
+	if (csim->updateModelFromCheckpoint() != 0)
+	{
+		std::cerr << "CellmlSbw::reset: Error with reset." << std::endl;
+		return;
+	}
+	std::cout << "Success in resetting the model." << std::endl;
 }
 // this method sets the value of the given component id (component.variable) to the given value
 void CellmlSbw::setValue(const std::string& componentId, double value)

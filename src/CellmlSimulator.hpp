@@ -8,6 +8,9 @@
 #ifndef CELLMLSIMULATOR_HPP_
 #define CELLMLSIMULATOR_HPP_
 
+#include <vector>
+#include <string>
+
 struct CellMLModel;
 struct Simulation;
 class CellmlCode;
@@ -41,12 +44,29 @@ public:
 	 */
 	int compileModel();
 
+	/**
+	 * Checkpoint (cache) the current model values for future reference/resetting. Return 0 on success.
+	 */
+	int checkpointModelValues();
+
+	/**
+	 * Update the executable model's values from the current checkpoint data. Return 0 on success.
+	 */
+	int updateModelFromCheckpoint();
+
 private:
 	std::string mUrl;
+	std::vector<std::string> mVariableIds;
 	struct CellMLModel* mModel;
 	struct Simulation* mSimulation;
 	class CellmlCode* mCode;
 	class ExecutableModel* mExecutableModel;
+	double* mBoundCache;
+	double* mRatesCache;
+	double* mStatesCache;
+	double* mConstantsCache;
+	double* mAlgebraicCache;
+	double* mOutputsCache;
 };
 
 #endif /* CELLMLSIMULATOR_HPP_ */

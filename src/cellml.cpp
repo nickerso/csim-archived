@@ -1689,9 +1689,11 @@ void annotateCellMLModelOutputs(struct CellMLModel* model, void* outputVariables
 	}
 }
 
-void* createOutputVariablesForAllLocalComponents(struct CellMLModel* model)
+void* createOutputVariablesForAllLocalComponents(struct CellMLModel* model,
+		std::vector<std::string>& variableIds)
 {
 	void* list = outputVariablesCreate();
+	variableIds.clear();
 	RETURN_INTO_OBJREF(localComponents, iface::cellml_api::CellMLComponentSet,
 			model->model->localComponents());
 	RETURN_INTO_OBJREF(iter, iface::cellml_api::CellMLComponentIterator,
@@ -1714,6 +1716,7 @@ void* createOutputVariablesForAllLocalComponents(struct CellMLModel* model)
 			std::string variableId = ccname;
 			variableId += ".";
 			variableId += cvname;
+			variableIds.push_back(variableId);
 			outputVariablesAppendVariable(list, ccname.c_str(), cvname.c_str(), columnIndex);
 			++columnIndex;
 		}
