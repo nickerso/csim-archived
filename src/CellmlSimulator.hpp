@@ -59,6 +59,24 @@ public:
 	 */
 	int setVariableValue(const std::string& variableId, double value);
 
+	/**
+	 * Returns a copy of the current list of variable IDs from the model.
+	 */
+	std::vector<std::string> getModelVariables();
+
+	/**
+	 * Returns the current output array as a vector of doubles.
+	 */
+	std::vector<double> getModelOutputs();
+
+	/**
+	 * Simulates the model from @initialTime to @endTime. The results of stepping between @startTime
+	 * and @endTime in @numSteps is returned as a string.
+	 *
+	 * FIXME: need to be able to control the actual integrator used underneath this...
+	 */
+	std::string simulateModel(double initialTime, double startTime, double endTime, double numSteps);
+
 private:
 	std::string mUrl;
 	std::vector<std::string> mVariableIds;

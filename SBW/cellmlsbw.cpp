@@ -87,22 +87,14 @@ void CellmlSbw::setValue(const std::string& variableId, double value)
 // this method returns all variables as vector with elements of format component.variable
 std::vector<std::string> CellmlSbw::getVariables()
 {
-	std::vector < std::string > listOfVariables;
-
-	listOfVariables.push_back("component.time");
-	listOfVariables.push_back("component.A");
-
+	std::vector < std::string > listOfVariables = csim->getModelVariables();
 	return listOfVariables;
 }
 
 // this method return the values of all variables at the last timepoint
 std::vector<double> CellmlSbw::getValues()
 {
-	std::vector<double> listOfLastResults;
-
-	listOfLastResults.push_back(1.1);
-	listOfLastResults.push_back(2.1);
-
+	std::vector<double> listOfLastResults = csim->getModelOutputs();
 	return listOfLastResults;
 }
 
@@ -110,7 +102,13 @@ std::vector<double> CellmlSbw::getValues()
 std::string CellmlSbw::simulate(double initialTime, double startTime,
 		double endTime, int numSteps)
 {
-	return "the same results as obtained / written to file before";
+	/**
+	 * FIXME: I'm presuming this is supposed to return the simulation results for the entire
+	 * simulation run as a single string? This may not always be a viable operation to perform?
+	 * But I vaguely recall Frank mentioning that most things are done via the oneStep method
+	 * nowadays, so this might not be a problem?
+	 */
+	return csim->simulateModel(initialTime, startTime, endTime, numSteps);
 }
 
 // this method brings the model to the next output point

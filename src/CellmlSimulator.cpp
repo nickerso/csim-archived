@@ -6,6 +6,9 @@
  */
 #include <iostream>
 #include <string>
+#include <cstdio>
+#include <vector>
+#include <cmath>
 
 #include "CellmlSimulator.hpp"
 #include "cellml-utils.hpp"
@@ -13,6 +16,7 @@
 #include "CellmlCode.hpp"
 #include "ModelCompiler.hpp"
 #include "ExecutableModel.hpp"
+#include "integrator.hpp"
 
 #ifdef __cplusplus
 extern "C"
@@ -24,6 +28,21 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+static std::string formatOutputValues(const std::vector<double>& values)
+{
+	std::string valueString;
+	char n[128];
+	std::vector<double>::const_iterator i = values.begin();
+	while (i != values.end())
+	{
+		sprintf(n, "%15.10e", *i);
+		valueString += std::string(n);
+		++i;
+		if (i != values.end()) valueString += "\t";
+	}
+	return valueString;
+}
 
 CellmlSimulator::CellmlSimulator() :
 	mModel(NULL), mSimulation(NULL), mCode(NULL), mExecutableModel(NULL),
@@ -126,7 +145,7 @@ int CellmlSimulator::compileModel()
 	}
 
 	// create the LLVM/Clang model compiler
-	ModelCompiler compiler(/*executable name*/"CellmlSimulator", /*verbose*/true, /*debug*/false);
+	ModelCompiler compiler(/*executable name*/"CellmlSimulator", /*verbose*/false, /*debug*/false);
 	// and the executable model
 	mExecutableModel = new ExecutableModel();
 	if (mExecutableModel->initialise(&compiler, mCode->codeFileName(), simulationGetBvarStart(mSimulation)) != 0)
@@ -232,3 +251,77 @@ int CellmlSimulator::setVariableValue(const std::string& variableId, double valu
 	return -1;
 }
 
+std::vector<std::string> CellmlSimulator::getModelVariables()
+{
+	return std::vector<std::string>(mVariableIds);
+}
+
+std::vector<double> CellmlSimulator::getModelOutputs()
+{
+	std::vector<double> outputs;
+	// get the current time?
+	double voi = mExecutableModel->bound[0];
+	// make sure the output array is current
+	mExecutableModel->getOutputs(voi);
+	// and populate the vector
+	for (int i=0; i<mExecutableModel->nOutputs; ++i)
+	{
+		outputs.push_back(mExecutableModel->outputs[i]);
+	}
+	return outputs;
+}
+
+std::string CellmlSimulator::simulateModel(double initialTime, double startTime, double endTime,
+		double numSteps)
+{
+	std::string results;
+	if (mExecutableModel && mSimulation && simulationIsValidDescription(mSimulation))
+	{
+		struct Integrator* integrator = CreateIntegrator(mSimulation, mExecutableModel);
+		if (integrator)
+		{
+			double t = initialTime;
+			// FIXME: need error checking?
+			// integrate till startTime if needed
+			if (fabs(initialTime-startTime) > 1.0e-10)
+			{
+				integrate(integrator, startTime, &t);
+			}
+			// grab the initial outputs
+			std::vector<double> outputs = getModelOutputs();
+			results += formatOutputValues(outputs);
+			results += "\n";
+			// and now integrate from startTime to endTime
+			double tabT = (endTime - startTime) / numSteps;
+			double tout = startTime + tabT;
+			if (tout > endTime)
+				tout = endTime;
+			while (1)
+			{
+				integrate(integrator, tout, &t);
+				outputs = getModelOutputs();
+				results += formatOutputValues(outputs);
+				results += "\n";
+				/* have we reached endTime? */
+				if (fabs(endTime - t) < 1.0e-10)
+					break;
+				/* if not, increase tout */
+				tout += tabT;
+				/* and make sure we don't go past tEnd */
+				if (tout > endTime)
+					tout = endTime;
+			}
+			DestroyIntegrator(&integrator);
+		}
+		else
+		{
+			std::cerr << "CellmlSimulator::simulateModel: Error creating integrator." << std::endl;
+		}
+	}
+	else
+	{
+		std::cerr << "CellmlSimulator::simulateModel: Error, invalid arguments." << std::endl;
+	}
+
+	return results;
+}

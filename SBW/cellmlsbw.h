@@ -21,6 +21,15 @@ public:
 	// this method resets the simulator back to initial conditions
 	void reset();
 	// this method sets the value of the given variable id (component.variable) to the given value
+	/**
+	 * FIXME: what happens when you set the value for an "initial_value" variable? unless the simulation
+	 * arrays are re-initialised then the new value would have no effect - you'd have to set the value of
+	 * the state variable directly. Not a problem if setValue is only ever called prior to simulation.
+	 *
+	 * FIXME: if the arrays were re-initialised for every setValue call, then you'd get all sorts of
+	 * (probably) unintended consequences as all state variables are reset to their initial values and any
+	 * computed constants would be reset, possibly overriding previous setValue calls.
+	 */
 	void setValue(const std::string& variableId, double value);
 	// this method returns all variables as vector with elements of format component.variable
 	std::vector<std::string> getVariables();
