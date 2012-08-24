@@ -61,9 +61,18 @@ csharp> service.getMethod("double[] getValues()").Call().get1DDoubleArray();
 
 # reset the integrator and try a more complex model
 csharp> service.getMethod("void reset()").Call();
+
+##
+## These seems to crash, but starting from module = ... again it simulates fine?
+## more work to do, but it does give a decent looking action potential :)
+##
+
 # this is a full cardiac cell electrophysiology model, no imports
 csharp> var modelString = service.getMethod("string serialiseCellmlFromUrl(string)").Call("http://models.cellml.org/w/andre/SAN-ORd/rawfile/a96ef0c616141b11c078a3d8bb5bd4f5550fe78d/Ohara_Rudy_2011.cellml");
+csharp> service.getMethod("void loadCellml(string)").Call(modelString.getString());
 
 # simulate the model for one cycle
-csharp> service.getMethod("string simulate(double,double,double,int)").Call(0.0, 0.0, 400.0, 450).getString();
-"...."
+csharp> var results = service.getMethod("string simulate(double,double,double,int)").Call(0.0, 0.0, 400.0, 450);
+csharp> System.IO.File.WriteAllText(@"/tmp/bob-results.txt", results.getString()); 
+
+(gnuplot> plot "/tmp/bob-results.txt" u 1:21)
