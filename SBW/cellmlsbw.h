@@ -39,7 +39,12 @@ public:
 	std::string simulate(double initialTime, double startTime, double endTime, int numSteps);
 	// this method brings the model to the next output point
 	void oneStep(double stepSize);
-	// this method brings the model to the next steady state
+	/**
+	 * this method brings the model to the next steady state.
+	 *
+	 * FIXME: need to decide what this means for CellML models. Perhaps with more information provided
+	 * via SED-ML this would make sense in some situations?
+	 */
 	void steadyState();
 
 	/*

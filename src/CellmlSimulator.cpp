@@ -45,7 +45,7 @@ static std::string formatOutputValues(const std::vector<double>& values)
 }
 
 CellmlSimulator::CellmlSimulator() :
-	mModel(NULL), mSimulation(NULL), mCode(NULL), mExecutableModel(NULL),
+	mModel(NULL), mSimulation(NULL), mCode(NULL), mExecutableModel(NULL), mIntegrator(NULL),
 	mBoundCache(NULL), mRatesCache(NULL), mStatesCache(NULL), mConstantsCache(NULL),
 	mAlgebraicCache(NULL), mOutputsCache(NULL)
 {
@@ -59,6 +59,7 @@ CellmlSimulator::~CellmlSimulator()
 	if (mSimulation) DestroySimulation(&mSimulation);
 	if (mCode) delete mCode;
 	if (mExecutableModel) delete mExecutableModel;
+	if (mIntegrator) DestroyIntegrator(&mIntegrator);
 	if (mBoundCache) free(mBoundCache);
 	if (mRatesCache) free(mRatesCache);
 	if (mStatesCache) free(mStatesCache);
@@ -277,15 +278,15 @@ std::string CellmlSimulator::simulateModel(double initialTime, double startTime,
 	std::string results;
 	if (mExecutableModel && mSimulation && simulationIsValidDescription(mSimulation))
 	{
-		struct Integrator* integrator = CreateIntegrator(mSimulation, mExecutableModel);
-		if (integrator)
+		if (!mIntegrator) mIntegrator = CreateIntegrator(mSimulation, mExecutableModel);
+		if (mIntegrator)
 		{
-			double t = initialTime;
+			mExecutableModel->bound[0] = initialTime;
 			// FIXME: need error checking?
 			// integrate till startTime if needed
 			if (fabs(initialTime-startTime) > 1.0e-10)
 			{
-				integrate(integrator, startTime, &t);
+				integrate(mIntegrator, startTime, mExecutableModel->bound);
 			}
 			// grab the initial outputs
 			std::vector<double> outputs = getModelOutputs();
@@ -298,12 +299,12 @@ std::string CellmlSimulator::simulateModel(double initialTime, double startTime,
 				tout = endTime;
 			while (1)
 			{
-				integrate(integrator, tout, &t);
+				integrate(mIntegrator, tout, mExecutableModel->bound);
 				outputs = getModelOutputs();
 				results += formatOutputValues(outputs);
 				results += "\n";
 				/* have we reached endTime? */
-				if (fabs(endTime - t) < 1.0e-10)
+				if (fabs(endTime - mExecutableModel->bound[0]) < 1.0e-10)
 					break;
 				/* if not, increase tout */
 				tout += tabT;
@@ -311,7 +312,6 @@ std::string CellmlSimulator::simulateModel(double initialTime, double startTime,
 				if (tout > endTime)
 					tout = endTime;
 			}
-			DestroyIntegrator(&integrator);
 		}
 		else
 		{
@@ -324,4 +324,40 @@ std::string CellmlSimulator::simulateModel(double initialTime, double startTime,
 	}
 
 	return results;
+}
+
+int CellmlSimulator::simulateModelOneStep(double stepSize)
+{
+	if (mExecutableModel && mSimulation && simulationIsValidDescription(mSimulation))
+	{
+		/* FIXME: we assume here that the oneStep method will be called in a sensible sequence of steps, so
+		 * we keep using the same integrator. Might want to look at some kind of integrator reset if needed
+		 * for arbitrary steps through time?
+		 *
+		 * FIXME: for now, the reset method will also "reset" the integrator
+		 */
+		if (!mIntegrator) mIntegrator = CreateIntegrator(mSimulation, mExecutableModel);
+		if (mIntegrator)
+		{
+			// grab the current "time"
+			double t = mExecutableModel->bound[0];
+			double tEnd = t + stepSize;
+			integrate(mIntegrator, tEnd, mExecutableModel->bound);
+		}
+		else
+		{
+			std::cerr << "CellmlSimulator::simulateModelOneStep: Error creating integrator." << std::endl;
+		}
+	}
+	else
+	{
+		std::cerr << "CellmlSimulator::simulateModelOneStep: Error, invalid arguments." << std::endl;
+	}
+	return 0;
+}
+
+int CellmlSimulator::resetIntegrator()
+{
+	if (mIntegrator) DestroyIntegrator(&mIntegrator);
+	return 0;
 }

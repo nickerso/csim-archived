@@ -13,6 +13,7 @@
 
 struct CellMLModel;
 struct Simulation;
+struct Integrator;
 class CellmlCode;
 class ExecutableModel;
 
@@ -77,6 +78,17 @@ public:
 	 */
 	std::string simulateModel(double initialTime, double startTime, double endTime, double numSteps);
 
+	/**
+	 * this method brings the model to the next output point. Returns 0 on success.
+	 */
+	int simulateModelOneStep(double stepSize);
+
+	/**
+	 * Reset the integrator. If an integrator exists, simply destroy it so that it will be re-created
+	 * next time the oneStep method is called.
+	 */
+	int resetIntegrator();
+
 private:
 	std::string mUrl;
 	std::vector<std::string> mVariableIds;
@@ -84,6 +96,7 @@ private:
 	struct Simulation* mSimulation;
 	class CellmlCode* mCode;
 	class ExecutableModel* mExecutableModel;
+	struct Integrator* mIntegrator;
 	double* mBoundCache;
 	double* mRatesCache;
 	double* mStatesCache;

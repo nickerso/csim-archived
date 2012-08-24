@@ -70,6 +70,10 @@ void CellmlSbw::reset()
 		std::cerr << "CellmlSbw::reset: Error with reset." << std::endl;
 		return;
 	}
+	/*
+	 * FIXME: for now, assume that when the model is reset the integration also needs to be reset.
+	 */
+	csim->resetIntegrator();
 	std::cout << "Success in resetting the model." << std::endl;
 }
 // this method sets the value of the given variable id (component.variable) to the given value
@@ -114,13 +118,13 @@ std::string CellmlSbw::simulate(double initialTime, double startTime,
 // this method brings the model to the next output point
 void CellmlSbw::oneStep(double stepSize)
 {
-
+	csim->simulateModelOneStep(stepSize);
 }
 
 // this method brings the model to the next steady state
 void CellmlSbw::steadyState()
 {
-
+	std::cerr << "CellmlSbw::steadyState: Not implemented." << std::endl;
 }
 
 // protected methods, the actual sbw calls
