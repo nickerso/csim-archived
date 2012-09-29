@@ -138,7 +138,7 @@ if (WIN32)
     # need to treat all C files as C++ to avoid problems (http://stackoverflow.com/questions/2706453/what-is-the-cause-of-these-visual-studio-2010-errors-warnings)
     #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /TP")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4290 /wd4091")
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-DWIN32 -D_CRT_SECURE_NO_WARNINGS)
 else(WIN32)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
     add_definitions(-Wall -Werror)
@@ -284,7 +284,8 @@ set_target_properties(${CSIM_LIBRARY_NAME} PROPERTIES
     VERSION "${CSim_VERSION_MAJOR}.${CSim_VERSION_MINOR}.${CSim_VERSION_PATCH}"
 )
 
-if (WIN32)
+OPTION(BUILD_STATIC_LIB "Build Static CSIM library" ON)
+if (BUILD_STATIC_LIB)
 	add_library(csim-static STATIC ${libCSim_SRCS})
 	set_target_properties(csim-static PROPERTIES
     OUTPUT_NAME csim-static

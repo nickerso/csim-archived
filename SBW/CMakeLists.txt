@@ -26,8 +26,8 @@ include_directories(/tmp/bobby/include)
 link_directories(/tmp/bobby/lib)
 
 add_executable(cellmlsbw cellmlsbw.cpp)
-add_dependencies(cellmlsbw csim-static)
-target_link_libraries(cellmlsbw ${SBW_LIBRARY}  csim-static
+add_dependencies(cellmlsbw ${CSIM_LIBRARY_NAME})
+target_link_libraries(cellmlsbw ${SBW_LIBRARY}  ${CSIM_LIBRARY_NAME}
   ${REQ_CLANG_LIBRARIES}
   ${REQ_LLVM_LIBRARIES}
   ${CELLML_LIBRARIES}

@@ -8,6 +8,12 @@
 #ifndef CELLMLSIMULATOR_HPP_
 #define CELLMLSIMULATOR_HPP_
 
+#ifdef WIN32
+#define CSIM_API __declspec(dllexport)
+#else
+#define CSIM_API
+#endif
+
 #include <vector>
 #include <string>
 
@@ -17,7 +23,7 @@ struct Integrator;
 class CellmlCode;
 class ExecutableModel;
 
-class CellmlSimulator
+class CSIM_API CellmlSimulator
 {
 public:
 	CellmlSimulator();
