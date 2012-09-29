@@ -8,27 +8,33 @@
 #  CCGS_LIBRARY, where to find the CCGS library.
 
 FIND_PATH(CCGS_INCLUDE_DIR IfaceCCGS.hxx 
+		${CSIM_DEPENDENCY_DIR}/include
         /usr/include/
         /usr/local/include/
 )
 
 FIND_LIBRARY(CCGS_LIBRARY ccgs
+		${CSIM_DEPENDENCY_DIR}/lib
         /usr/lib 
         /usr/local/lib
 )
 FIND_LIBRARY(ANNO_TOOLS_LIBRARY annotools
+		${CSIM_DEPENDENCY_DIR}/lib
         /usr/lib 
         /usr/local/lib
 )
 FIND_LIBRARY(CEVAS_LIBRARY cevas
+		${CSIM_DEPENDENCY_DIR}/lib
         /usr/lib 
         /usr/local/lib
 )
 FIND_LIBRARY(CUSES_LIBRARY cuses
+		${CSIM_DEPENDENCY_DIR}/lib
         /usr/lib 
         /usr/local/lib
 )
 FIND_LIBRARY(MALAES_LIBRARY malaes
+		${CSIM_DEPENDENCY_DIR}/lib
         /usr/lib 
         /usr/local/lib
 )

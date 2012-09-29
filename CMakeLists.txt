@@ -2,6 +2,8 @@
 PROJECT(CSim)
 cmake_minimum_required(VERSION 2.8)
 
+set(CSIM_DEPENDENCY_DIR "${CMAKE_SOURCE_DIR}/deps" CACHE path "Dependency directory")
+
 # By default, do not warn when built on machines using only VS Express.
 # and need to let people know to install Microsoft Visual C++ 2010 Redistributable Package
 # before running, if required...(http://www.microsoft.com/en-us/download/details.aspx?id=5555)
@@ -282,6 +284,14 @@ set_target_properties(${CSIM_LIBRARY_NAME} PROPERTIES
     VERSION "${CSim_VERSION_MAJOR}.${CSim_VERSION_MINOR}.${CSim_VERSION_PATCH}"
 )
 
+if (WIN32)
+	add_library(csim-static STATIC ${libCSim_SRCS})
+	set_target_properties(csim-static PROPERTIES
+    OUTPUT_NAME csim-static
+    VERSION "${CSim_VERSION_MAJOR}.${CSim_VERSION_MINOR}.${CSim_VERSION_PATCH}"
+)
+endif()
+
 # Install the built application and required libraries on the various platforms
 
 set(library_dest_dir bin)
@@ -337,6 +347,14 @@ set(DIRS
     ${LIBXML2_BIN_DIR}
 )
 message(STATUS "DIRS = ${DIRS}")
+
+OPTION(BUILD_SBW_MODULE "Build SBW Module" OFF)
+if (${BUILD_SBW_MODULE})
+	add_subdirectory(SBW)
+endif()
+
+
+
 
 # Now the work of copying dependencies into the bundle/package
 # The quotes are escaped and variables to use at install time have their $ escaped

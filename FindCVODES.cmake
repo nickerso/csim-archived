@@ -9,16 +9,19 @@
 #  CVODES_NVECTOR_SERIAL_LIBRARY, where to find NVECTOR_SERIAL.
 
 FIND_PATH(CVODES_INCLUDE_DIR cvodes/cvodes.h 
+		${CSIM_DEPENDENCY_DIR}/include
         /usr/include/
         /usr/local/include/
 )
 
 FIND_LIBRARY(CVODES_LIBRARY sundials_cvodes
+		${CSIM_DEPENDENCY_DIR}/lib
         /usr/lib
         /usr/local/lib
 ) 
 
 FIND_LIBRARY(CVODES_NVECTOR_SERIAL_LIBRARY sundials_nvecserial
+		${CSIM_DEPENDENCY_DIR}/lib
         /usr/lib
         /usr/local/lib
 ) 

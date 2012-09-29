@@ -1,7 +1,7 @@
 #include <iostream>
 #include <SBW/SBW.h>
-#include <cellmlsbw.h>
 
+#include <cellmlsbw.h>
 #include <CellmlSimulator.hpp>
 
 // public methods ... replace with actual calls to the CellML API

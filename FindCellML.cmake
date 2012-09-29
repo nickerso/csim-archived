@@ -8,11 +8,13 @@
 #  CELLML_LIBRARY, where to find the CellML library.
 
 FIND_PATH(CELLML_INCLUDE_DIR IfaceCellML_APISPEC.hxx 
+		${CSIM_DEPENDENCY_DIR}/include
         /usr/include/
         /usr/local/include/
 )
 
 FIND_LIBRARY(CELLML_LIBRARY cellml
+		${CSIM_DEPENDENCY_DIR}/lib
         /usr/lib 
         /usr/local/lib
 ) 
