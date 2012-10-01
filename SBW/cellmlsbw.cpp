@@ -103,7 +103,7 @@ std::vector<double> CellmlSbw::getValues()
 }
 
 // this method simulates the loaded model returning the result as string
-std::string CellmlSbw::simulate(double initialTime, double startTime,
+std::vector<std::vector<double> > CellmlSbw::simulate(double initialTime, double startTime,
 		double endTime, int numSteps)
 {
 	/**

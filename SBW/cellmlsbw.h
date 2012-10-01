@@ -36,7 +36,7 @@ public:
 	// this method return the values of all variables at the last timepoint
 	std::vector<double> getValues();
 	// this method simulates the loaded model returning the result as string
-	std::string simulate(double initialTime, double startTime, double endTime, int numSteps);
+	std::vector<std::vector<double> > simulate(double initialTime, double startTime, double endTime, int numSteps);
 	// this method brings the model to the next output point
 	void oneStep(double stepSize);
 	/**
@@ -82,7 +82,7 @@ public:
 		table.addMethod(&CellmlSbw::setValueImpl, "void setValue(string, double)");
 		table.addMethod(&CellmlSbw::getVariablesImpl, "string[] getVariables()");
 		table.addMethod(&CellmlSbw::getValuesImpl, "double[] getValues()");
-		table.addMethod(&CellmlSbw::simulateImpl, "string simulate(double,double,double,int)");
+		table.addMethod(&CellmlSbw::simulateImpl, "double[][] simulate(double,double,double,int)");
 		table.addMethod(&CellmlSbw::oneStepImpl, "void oneStep(double)");
 		table.addMethod(&CellmlSbw::steadyStateImpl, "void steadyState()");
 		table.addMethod(&CellmlSbw::serialiseCellmlFromUrlImpl, "string serialiseCellmlFromUrl(string)");
