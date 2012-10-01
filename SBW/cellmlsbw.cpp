@@ -167,7 +167,7 @@ DataBlockWriter CellmlSbw::getValuesImpl(Module from, DataBlockReader reader)
 	return DataBlockWriter() << getValues();
 }
 
-void addData(DataBlockWriter &writer, const vector<vector<double>> &data)
+void addData(DataBlockWriter &writer, const vector<vector<double> > &data)
 {
 	int numRows = data.size();	
 	int numCols = numRows > 0 ? data[0].size() : 0;
@@ -208,7 +208,7 @@ DataBlockWriter CellmlSbw::simulateImpl(Module from, DataBlockReader reader)
 	double initialTime, startTime, endTime;
 	int numPoints;
 	reader >> initialTime >> startTime >> endTime >> numPoints;
-	const vector<vector<double>> &data = simulate(initialTime, startTime, endTime, numPoints);
+	const vector<vector<double> > &data = simulate(initialTime, startTime, endTime, numPoints);
 	DataBlockWriter result; 
 	addData(result, data);
 	return result;			
