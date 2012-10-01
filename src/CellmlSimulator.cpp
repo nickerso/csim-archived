@@ -29,6 +29,7 @@ extern "C"
 }
 #endif
 
+#if 0
 static std::string formatOutputValues(const std::vector<double>& values)
 {
 	std::string valueString;
@@ -43,6 +44,7 @@ static std::string formatOutputValues(const std::vector<double>& values)
 	}
 	return valueString;
 }
+#endif
 
 CellmlSimulator::CellmlSimulator() :
 	mModel(NULL), mSimulation(NULL), mCode(NULL), mExecutableModel(NULL), mIntegrator(NULL),
@@ -272,10 +274,10 @@ std::vector<double> CellmlSimulator::getModelOutputs()
 	return outputs;
 }
 
-std::string CellmlSimulator::simulateModel(double initialTime, double startTime, double endTime,
+std::vector<std::vector<double> > CellmlSimulator::simulateModel(double initialTime, double startTime, double endTime,
 		double numSteps)
 {
-	std::string results;
+	std::vector<std::vector<double> > results;
 	if (mExecutableModel && mSimulation && simulationIsValidDescription(mSimulation))
 	{
 		if (!mIntegrator) mIntegrator = CreateIntegrator(mSimulation, mExecutableModel);
@@ -289,9 +291,12 @@ std::string CellmlSimulator::simulateModel(double initialTime, double startTime,
 				integrate(mIntegrator, startTime, mExecutableModel->bound);
 			}
 			// grab the initial outputs
+			results.push_back(getModelOutputs());
+			/*
 			std::vector<double> outputs = getModelOutputs();
 			results += formatOutputValues(outputs);
 			results += "\n";
+			*/
 			// and now integrate from startTime to endTime
 			double tabT = (endTime - startTime) / numSteps;
 			double tout = startTime + tabT;
@@ -300,9 +305,12 @@ std::string CellmlSimulator::simulateModel(double initialTime, double startTime,
 			while (1)
 			{
 				integrate(mIntegrator, tout, mExecutableModel->bound);
+				results.push_back(getModelOutputs());
+				/*
 				outputs = getModelOutputs();
 				results += formatOutputValues(outputs);
 				results += "\n";
+				*/
 				/* have we reached endTime? */
 				if (fabs(endTime - mExecutableModel->bound[0]) < 1.0e-10)
 					break;

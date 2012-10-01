@@ -82,7 +82,7 @@ public:
 	 *
 	 * FIXME: need to be able to control the actual integrator used underneath this...
 	 */
-	std::string simulateModel(double initialTime, double startTime, double endTime, double numSteps);
+	std::vector<std::vector<double> > simulateModel(double initialTime, double startTime, double endTime, double numSteps);
 
 	/**
 	 * this method brings the model to the next output point. Returns 0 on success.
