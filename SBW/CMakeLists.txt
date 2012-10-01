@@ -26,14 +26,28 @@ include_directories(/tmp/bobby/include)
 link_directories(/tmp/bobby/lib)
 
 add_executable(cellmlsbw cellmlsbw.cpp)
-add_dependencies(cellmlsbw ${CSIM_LIBRARY_NAME})
-target_link_libraries(cellmlsbw ${SBW_LIBRARY}  ${CSIM_LIBRARY_NAME}
-  ${REQ_CLANG_LIBRARIES}
-  ${REQ_LLVM_LIBRARIES}
-  ${CELLML_LIBRARIES}
-  ${CCGS_LIBRARIES}
-  ${CVODES_LIBRARIES}
-  ${LIBXML2_LIBRARIES}
-  ${ZLIB_LIBRARIES}
-  ${PLATFORM_LIBS})
+
+if (BUILD_STATIC_LIB)
+  add_dependencies(cellmlsbw csim-static)
+  target_link_libraries(cellmlsbw ${SBW_LIBRARY}  csim-static
+    ${REQ_CLANG_LIBRARIES}
+    ${REQ_LLVM_LIBRARIES}
+    ${CELLML_LIBRARIES}
+    ${CCGS_LIBRARIES}
+    ${CVODES_LIBRARIES}
+    ${LIBXML2_LIBRARIES}
+    ${ZLIB_LIBRARIES}
+    ${PLATFORM_LIBS})
+else()
+  add_dependencies(cellmlsbw ${CSIM_LIBRARY_NAME})
+  target_link_libraries(cellmlsbw ${SBW_LIBRARY}  ${CSIM_LIBRARY_NAME}
+    ${REQ_CLANG_LIBRARIES}
+    ${REQ_LLVM_LIBRARIES}
+    ${CELLML_LIBRARIES}
+    ${CCGS_LIBRARIES}
+    ${CVODES_LIBRARIES}
+    ${LIBXML2_LIBRARIES}
+    ${ZLIB_LIBRARIES}
+    ${PLATFORM_LIBS})
+endif()
 install(TARGETS cellmlsbw DESTINATION bin)
