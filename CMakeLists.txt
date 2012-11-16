@@ -29,7 +29,7 @@ endif()
 # Set version information in a config.h file
 set(CSim_VERSION_MAJOR 0)
 set(CSim_VERSION_MINOR 4)
-set(CSim_VERSION_PATCH 2)
+set(CSim_VERSION_PATCH 3)
 configure_file(
   "${PROJECT_SOURCE_DIR}/src/csim-config.h.in"
   "${PROJECT_BINARY_DIR}/csim-config.h"
