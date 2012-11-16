@@ -94,7 +94,7 @@ splitIntString(const std::string& s)
 	std::vector<int> ints;
 	std::vector<std::string> elements;
 	elements = splitString(s, ',', elements);
-	int i;
+	unsigned int i;
 	for (i=0; i<elements.size(); i++)
 	{
 		int c = strtol(elements[i].c_str(), NULL, /*base 10*/10);
@@ -693,7 +693,7 @@ static std::wstring writeOutputFunction(iface::cellml_services::CodeInformation*
 			// need to check for multiple outputs of the same source variable
 			std::vector<int> indices = splitIntString(col);
 			// FIXME: assume this always works since we set the annotation...
-			int i;
+			unsigned int i;
 			for (i=0; i< indices.size(); i++)
 			{
 				int outputVariableIndex = indices[i] - 1;
