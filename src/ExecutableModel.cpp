@@ -97,7 +97,7 @@ int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename, d
         return -3;
 	}
 	mSetupFixedConstants = compiledModel->getFunction("SetupFixedConstants");
-	mComputeRates = compiledModel->getFunction("ComputeRates");
+	mComputeRates = (ComputeRatesFunction)(mEE->getPointerToFunction(compiledModel->getFunction("ComputeRates")));
 	mEvaluateVariables = compiledModel->getFunction("EvaluateVariables");
 	mGetOutputs = compiledModel->getFunction("GetOutputs");
 	if (!(mSetupFixedConstants && mComputeRates && mEvaluateVariables && mGetOutputs))
@@ -172,7 +172,7 @@ int ExecutableModel::setupFixedConstants()
 
 int ExecutableModel::computeRates(double voi)
 {
-    std::vector<llvm::GenericValue> args(5);
+/*    std::vector<llvm::GenericValue> args(5);
     args[0].DoubleVal = voi;
     args[1].PointerVal = states;
     args[2].PointerVal = rates;
@@ -187,6 +187,8 @@ int ExecutableModel::computeRates(double voi)
         std::cout << "arg 0 is not a double - WTF?!" << std::endl;
 #endif
 	llvm::GenericValue gv = mEE->runFunction(mComputeRates, args);
+*/
+	(*mComputeRates)(voi, states, rates, constants, algebraic);
 	return 0;
 }
 

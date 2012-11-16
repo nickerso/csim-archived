@@ -8,6 +8,8 @@
 #ifndef EXECUTABLEMODEL_HPP_
 #define EXECUTABLEMODEL_HPP_
 
+typedef void (*ComputeRatesFunction)(double, double*, double*, double*, double*);
+
 // forward declare from LLVM
 namespace llvm
 {
@@ -61,7 +63,7 @@ public:
 
 private:
 	llvm::Function* mSetupFixedConstants;
-	llvm::Function* mComputeRates;
+	ComputeRatesFunction mComputeRates;
 	llvm::Function* mEvaluateVariables;
 	llvm::Function* mGetOutputs;
 	llvm::ExecutionEngine* mEE;
