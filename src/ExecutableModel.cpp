@@ -96,10 +96,10 @@ int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename, d
 		llvm::errs() << "'getN*' function not found in module.\n";
         return -3;
 	}
-	mSetupFixedConstants = compiledModel->getFunction("SetupFixedConstants");
+	mSetupFixedConstants = (SetupFixedConstantsFunction)(mEE->getPointerToFunction(compiledModel->getFunction("SetupFixedConstants")));
 	mComputeRates = (ComputeRatesFunction)(mEE->getPointerToFunction(compiledModel->getFunction("ComputeRates")));
-	mEvaluateVariables = compiledModel->getFunction("EvaluateVariables");
-	mGetOutputs = compiledModel->getFunction("GetOutputs");
+	mEvaluateVariables = (EvaluateVariablesFunction)(mEE->getPointerToFunction(compiledModel->getFunction("EvaluateVariables")));
+	mGetOutputs = (GetOutputsFunction)(mEE->getPointerToFunction(compiledModel->getFunction("GetOutputs")));
 	if (!(mSetupFixedConstants && mComputeRates && mEvaluateVariables && mGetOutputs))
 	{
 		llvm::errs() << "'compute functions' function not found in module.\n";
@@ -162,11 +162,13 @@ ExecutableModel::~ExecutableModel()
 
 int ExecutableModel::setupFixedConstants()
 {
-	std::vector<llvm::GenericValue> args(3);
+/*	std::vector<llvm::GenericValue> args(3);
 	args[0].PointerVal = (void*)constants;
 	args[1].PointerVal = (void*)rates;
 	args[2].PointerVal = (void*)states;
 	llvm::GenericValue gv = mEE->runFunction(mSetupFixedConstants, args);
+*/
+	(*mSetupFixedConstants)(constants, rates, states);
 	return 0;
 }
 
@@ -194,25 +196,29 @@ int ExecutableModel::computeRates(double voi)
 
 int ExecutableModel::evaluateVariables(double voi)
 {
-    std::vector<llvm::GenericValue> args(5);
+/*    std::vector<llvm::GenericValue> args(5);
     args[0].DoubleVal = voi;
     args[1].PointerVal = constants;
     args[2].PointerVal = rates;
     args[3].PointerVal = states;
     args[4].PointerVal = algebraic;
     llvm::GenericValue gv = mEE->runFunction(mEvaluateVariables, args);
+*/
+	(*mEvaluateVariables)(voi, constants, rates, states, algebraic);
 	return 0;
 }
 
 int ExecutableModel::getOutputs(double voi)
 {
-    std::vector<llvm::GenericValue> args(5);
+/*    std::vector<llvm::GenericValue> args(5);
     args[0].DoubleVal = voi;
 	args[1].PointerVal = (void*)constants;
 	args[2].PointerVal = (void*)states;
 	args[3].PointerVal = (void*)algebraic;
 	args[4].PointerVal = (void*)outputs;
 	llvm::GenericValue gv = mEE->runFunction(mGetOutputs, args);
+*/
+	(*mGetOutputs)(voi, constants, states, algebraic, outputs);
 	return 0;
 }
 
