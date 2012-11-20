@@ -109,7 +109,7 @@ static void help(char* prog)
 			"http://www.cellml.org/specifications\n"
 			"\n"
 			"%s uses:\n"
-			"- The CellML API (version 1.11)\n"
+			"- The CellML API (version 1.12)\n"
 			"  http://www.cellml.org\n"
 			"- LLVM/Clang (version 3.1)\n"  // FIXME: need to pull in verson better?
 			"  http://www.llvm.org\n"
