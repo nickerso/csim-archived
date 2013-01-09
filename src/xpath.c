@@ -57,6 +57,10 @@ struct Simulation* getSimulation(const char* uri)
 	DEBUG(99, "getSimulation", "set base fields for new simulation\n");
 
 	// TODO: need to get algorithm and parameters...
+	// default to BDF with Newton iterations and dense solver
+	simulationSetMultistepMethod(simulation, BDF);
+	simulationSetIterationMethod(simulation, NEWTON);
+	simulationSetLinearSolver(simulation, DENSE);
 
 	value = getTextContent(doc, BAD_CAST "//csim:simulation/@id");
 	if (value)
