@@ -171,36 +171,29 @@ void addData(DataBlockWriter &writer, const vector<vector<double> > &data)
 {
 	int numRows = data.size();	
 	int numCols = numRows > 0 ? data[0].size() : 0;
-	
+
 	// allocate
 	double ** rawData = (double**)malloc(sizeof(double*)*numRows); 	
-	memset(rawData, 0, sizeof(double*)*numRows);
+    memset(rawData, 0, sizeof(double*)*numRows);
 	
 	// copy
-	for (size_t i = 0; i < data.size(); ++i)
+    for (size_t i = 0; i < numRows; ++i)
 	{
 		rawData [i] = (double*)malloc(sizeof(double)*numCols);
-		memset(rawData[i], 0, sizeof(double*)*numRows);
-		for (size_t j = 0; j < data[j].size(); ++j)
+        memset(rawData[i], 0, sizeof(double*)*numCols);
+        for (size_t j = 0; j < numCols; ++j)
 		{
 			rawData [i][j] = data[i][j];
-#ifdef DEBUG
-			cout << rawData [i][j] << '\t';
-#endif
 		}
-#ifdef DEBUG
-		cout << endl;
-#endif
 	}
 	
 	// add to SBW
 	writer.add(numRows, numCols, rawData);
 	
 	// cleanup
-	for (size_t i = 0; i < data.size(); ++i)
+    for (size_t i = 0; i < numRows; ++i)
 		free (rawData[i]);
 	free (rawData);
-	
 }
 
 DataBlockWriter CellmlSbw::simulateImpl(Module from, DataBlockReader reader)
