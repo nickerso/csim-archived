@@ -95,6 +95,11 @@ public:
 	 */
 	int resetIntegrator();
 
+    /**
+      * Set the tolerances and maximum number of steps in the integtator.
+      */
+    void setTolerances(double aTol, double rTol, int maxSteps);
+
 private:
 	std::string mUrl;
 	std::vector<std::string> mVariableIds;

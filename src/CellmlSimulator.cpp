@@ -371,3 +371,13 @@ int CellmlSimulator::resetIntegrator()
 	if (mIntegrator) DestroyIntegrator(&mIntegrator);
 	return 0;
 }
+
+void CellmlSimulator::setTolerances(double aTol, double rTol, int maxSteps)
+{
+    if (mSimulation)
+    {
+        simulationSetATol(mSimulation, 1, &aTol);
+        simulationSetRTol(mSimulation, rTol);
+        //FIXME: need to handle maxSteps
+    }
+}
