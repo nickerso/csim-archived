@@ -286,6 +286,7 @@ std::string modelUrlToString(const std::string& url)
   try
   {
     model = ml->loadFromURL(URL);
+    // TODO: Flatten model here!
   }
   catch (...)
   {
