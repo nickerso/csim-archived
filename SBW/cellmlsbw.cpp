@@ -120,11 +120,6 @@ std::vector<std::vector<double> > CellmlSbw::simulate(double initialTime, double
 	return csim->simulateModel(initialTime, startTime, endTime, numSteps);
 }
 
-void CellmlSbw::setTolerances(double aTol, double rTol, int maxSteps)
-{
-    csim->setTolerances(aTol, rTol, maxSteps);
-}
-
 // this method brings the model to the next output point
 void CellmlSbw::oneStep(double stepSize)
 {
@@ -209,16 +204,7 @@ DataBlockWriter CellmlSbw::simulateImpl(Module from, DataBlockReader reader)
 	const vector<vector<double> > &data = simulate(initialTime, startTime, endTime, numPoints);
 	DataBlockWriter result; 
 	addData(result, data);
-    return result;
-}
-
-DataBlockWriter CellmlSbw::setTolerancesImpl(Module from, DataBlockReader reader)
-{
-    double aTol, rTol;
-    int maxSteps;
-    reader >> aTol >> rTol >> maxSteps;
-    setTolerances(aTol, rTol, maxSteps);
-    return DataBlockWriter();
+	return result;			
 }
 
 DataBlockWriter CellmlSbw::oneStepImpl(Module from, DataBlockReader reader)

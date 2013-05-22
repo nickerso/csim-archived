@@ -47,8 +47,6 @@ public:
 	 */
 	void steadyState();
 
-    void setTolerances(double aTol, double rTol, int maxSteps);
-
 	/*
 	 * FIXME: just adding this method for testing and demonstration - not sure if its appropriate here.
 	 */
@@ -72,9 +70,8 @@ protected :
 	DataBlockWriter oneStepImpl(Module from, DataBlockReader reader);
 	// the sbw implementation of the steady state call
 	DataBlockWriter steadyStateImpl(Module from, DataBlockReader reader);
-    // the sbw implementation of the serialise CellML model method
-    DataBlockWriter serialiseCellmlFromUrlImpl(Module from, DataBlockReader reader);
-    DataBlockWriter setTolerancesImpl(Module from, DataBlockReader reader);
+	// the sbw implementation of the serialise CellML model method
+	DataBlockWriter serialiseCellmlFromUrlImpl(Module from, DataBlockReader reader);
 
 public:
 	// the registration of methods with sbw
@@ -89,7 +86,6 @@ public:
 		table.addMethod(&CellmlSbw::oneStepImpl, "void oneStep(double)");
 		table.addMethod(&CellmlSbw::steadyStateImpl, "void steadyState()");
 		table.addMethod(&CellmlSbw::serialiseCellmlFromUrlImpl, "string serialiseCellmlFromUrl(string)");
-        table.addMethod(&CellmlSbw::setTolerancesImpl, "void setTolerances(double, double, int)");
 	}
 
 };
