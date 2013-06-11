@@ -48,6 +48,7 @@
 #include "cellml-utils.h"
 #include "cellml-utils.hpp"
 #include "utils.hxx"
+#include "flatten-model.hpp"
 
 #ifdef __cplusplus
 extern "C"
@@ -282,10 +283,14 @@ std::string modelUrlToString(const std::string& url)
   RETURN_INTO_OBJREF(ml,iface::cellml_api::ModelLoader,cb->modelLoader());
 
   iface::cellml_api::Model* model = (iface::cellml_api::Model*)NULL;
+  //iface::cellml_api::Model* flatModel = (iface::cellml_api::Model*)NULL;
+  ObjRef<iface::cellml_api::Model> flatModel;
   // Try and load the CellML model from the URL
   try
   {
     model = ml->loadFromURL(URL);
+    // TODO: Flatten model here!
+    flatModel = flattenModel(model);
   }
   catch (...)
   {
@@ -295,12 +300,12 @@ std::string modelUrlToString(const std::string& url)
     return(modelString);
   }
 
-  // set the xml:base
-  RETURN_INTO_OBJREF(uri,iface::cellml_api::URI,model->xmlBase());
+  // set the xml:base to keep track of the original URL of the model
+  RETURN_INTO_OBJREF(uri,iface::cellml_api::URI,flatModel->xmlBase());
   uri->asText(URL);
   free(URL);
 
-  RETURN_INTO_WSTRING(ms, model->serialisedText());
+  RETURN_INTO_WSTRING(ms, flatModel->serialisedText());
   RETURN_INTO_STRING(mss, wstring2string(ms.c_str()));
 
   model->release_ref();

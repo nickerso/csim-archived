@@ -21,10 +21,7 @@ CellmlSbw::~CellmlSbw()
 	if (csim) delete csim;
 }
 
-/*
- * FIXME: just adding this method for testing and demonstration - not sure if its appropriate here.
- */
-// this method serialises the model from the given URL into a string and ensures the the xml:base is set appropriately
+// this method serialises the model from the given URL into a string, the model will be flattened to ensure the entire model is contained in the string.
 std::string CellmlSbw::serialiseCellmlFromUrl(const std::string & url)
 {
 	std::cout << "Serialising the CellML model: \"" << url.c_str() << "\"" << std::endl;
@@ -33,9 +30,6 @@ std::string CellmlSbw::serialiseCellmlFromUrl(const std::string & url)
 }
 
 // this method loads the given model into the cellml simulator
-/* FIXME: We assume here that the xml:base of the serialised document has been set correctly
- * to ensure that imports can be resolved appropriately.
- */
 void CellmlSbw::loadCellml(const std::string & cellmlModelString)
 {
 	//std::cout << "Loading CellML model: \"" << cellmlModelString.c_str() << "\"" << std::endl;
@@ -111,12 +105,6 @@ std::vector<double> CellmlSbw::getValues()
 std::vector<std::vector<double> > CellmlSbw::simulate(double initialTime, double startTime,
 		double endTime, int numSteps)
 {
-	/**
-	 * FIXME: I'm presuming this is supposed to return the simulation results for the entire
-	 * simulation run as a single string? This may not always be a viable operation to perform?
-	 * But I vaguely recall Frank mentioning that most things are done via the oneStep method
-	 * nowadays, so this might not be a problem?
-	 */
 	return csim->simulateModel(initialTime, startTime, endTime, numSteps);
 }
 

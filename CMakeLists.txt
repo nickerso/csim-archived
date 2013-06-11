@@ -172,6 +172,7 @@ SET(CSim_SRCS
   src/utils.c
   src/timer.c
   src/cellml.cpp
+  src/flatten-model.cpp
   src/cellml-utils.cpp
   src/CellmlCode.cpp
   src/integrator.cpp
@@ -188,6 +189,7 @@ SET(libCSim_SRCS
   src/utils.c
   src/timer.c
   src/cellml.cpp
+  src/flatten-model.cpp
   src/cellml-utils.cpp
   src/CellmlCode.cpp
   src/integrator.cpp
