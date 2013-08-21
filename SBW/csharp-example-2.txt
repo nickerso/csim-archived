@@ -1,0 +1,8 @@
+var module = new SBW.Module("edu.caltech.cellmlsbw"); var service = module.getService("cellmlsbw"); var modelString = service.getMethod("string serialiseCellmlFromUrl(string)").Call("http://models.cellml.org/w/andre/sine/rawfile/293afb20feb51d1739b6645eaf2cd18b1a4f3bcb/sin_approximations_import.xml"); service.getMethod("void loadCellml(string)").Call(modelString.getString());                                                                                                                                
+var bob = service.getMethod("double[][] simulate(double,double,double,int)").Call(0.0, 3.0, 6.0, 3);
+
+var something = bob.getObject();
+something.GetType();
+System.Double[,] arrg= (System.Double[,])something;
+arrg[0,1];
+arrg[0,3]; 
