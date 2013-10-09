@@ -142,7 +142,8 @@ if (WIN32)
     add_definitions(-DWIN32 -D_CRT_SECURE_NO_WARNINGS)
 else(WIN32)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
-    add_definitions(-Wall -Werror)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    add_definitions("-Wall" "-Werror")
     # TODO: need a way to determine when lapack and blas are required.
     #set(PLATFORM_LIBS ${PLATFORM_LIBS} "lapack" "blas" "m")
     set(PLATFORM_LIBS ${PLATFORM_LIBS} "m")
@@ -178,7 +179,8 @@ SET(CSim_SRCS
   src/integrator.cpp
   src/ccgs_required_functions.cpp
   src/simulation.c
-  src/xpath.c
+  src/xpath.cpp
+  src/xmldoc.cpp
   src/outputVariables.cpp
   src/ModelCompiler.cpp
   src/ExecutableModel.cpp
@@ -195,7 +197,8 @@ SET(libCSim_SRCS
   src/integrator.cpp
   src/ccgs_required_functions.cpp
   src/simulation.c
-  src/xpath.c
+  src/xpath.cpp
+  src/xmldoc.cpp
   src/outputVariables.cpp
   src/ModelCompiler.cpp
   src/ExecutableModel.cpp

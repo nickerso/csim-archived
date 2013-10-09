@@ -21,11 +21,11 @@ extern "C"
 #include "cellml.h"
 #include "simulation.h"
 #include "timer.h"
-#include "xpath.h"
 #ifdef __cplusplus
 }
 #endif
 
+#include "xpath.hpp"
 #include "integrator.hpp"
 #include "CellmlCode.hpp"
 #include "ModelCompiler.hpp"

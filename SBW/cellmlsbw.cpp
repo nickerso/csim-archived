@@ -29,6 +29,14 @@ std::string CellmlSbw::serialiseCellmlFromUrl(const std::string & url)
 	return model;
 }
 
+std::string CellmlSbw::mapXpathToVariableId(const std::string & xpathExpr)
+{
+    std::cout << "Mapping the XPath: \"" << xpathExpr.c_str() << "\" to the variable ID: \"";
+    std::string variableId = csim->mapXpathToVariableId(xpathExpr);
+    std::cout << variableId.c_str() << "\"" << std::endl;
+    return variableId;
+}
+
 // this method loads the given model into the cellml simulator
 void CellmlSbw::loadCellml(const std::string & cellmlModelString)
 {
@@ -123,6 +131,11 @@ void CellmlSbw::oneStep(double stepSize)
 void CellmlSbw::steadyState()
 {
 	std::cerr << "CellmlSbw::steadyState: Not implemented." << std::endl;
+}
+
+void CellmlSbw::registerNamespace(const string &prefix, const string &uri)
+{
+    csim->registerNamespace(prefix, uri);
 }
 
 // protected methods, the actual sbw calls
@@ -227,9 +240,24 @@ DataBlockWriter CellmlSbw::steadyStateImpl(Module from, DataBlockReader reader)
 
 DataBlockWriter CellmlSbw::serialiseCellmlFromUrlImpl(Module from, DataBlockReader reader)
 {
-	std::string url;
-	reader >> url;
-	return DataBlockWriter() << serialiseCellmlFromUrl(url);
+    std::string url;
+    reader >> url;
+    return DataBlockWriter() << serialiseCellmlFromUrl(url);
+}
+
+DataBlockWriter CellmlSbw::mapXpathToVariableIdImpl(Module from, DataBlockReader reader)
+{
+    std::string xpathExpr;
+    reader >> xpathExpr;
+    return DataBlockWriter() << mapXpathToVariableId(xpathExpr);
+}
+
+DataBlockWriter CellmlSbw::registerNamespaceImpl(Module from, DataBlockReader reader)
+{
+    std::string prefix, uri;
+    reader >> prefix >> uri;
+    registerNamespace(prefix, uri);
+    return DataBlockWriter();
 }
 
 int main(int argc, char* argv[])

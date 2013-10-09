@@ -5,12 +5,12 @@
  *      Author: dnic019
  */
 
-#ifndef XPATH_H_
-#define XPATH_H_
+#ifndef XPATH_HPP_
+#define XPATH_HPP_
 
 struct Simulation;
 
 struct Simulation* getSimulation(const char* uri);
 
 
-#endif /* XPATH_H_ */
+#endif /* XPATH_HPP_ */

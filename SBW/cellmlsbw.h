@@ -52,8 +52,15 @@ public:
 	/*
 	 * FIXME: just adding this method for testing and demonstration - not sure if its appropriate here.
 	 */
-	// this method serialises the model from the given URL into a string and ensures the the xml:base is set appropriately
+    // this method serialises the flattened version of the model from the given URL into a string and ensures the the xml:base is set appropriately. The original XML document is also cached for use in evaluating XPath expressions.
 	std::string serialiseCellmlFromUrl(const std::string & url);
+
+    // this method maps XPath expressions to variable IDs for use with these methods.
+    std::string mapXpathToVariableId(const std::string& xpathExpr);
+
+    // register XML namespaces to be used when evaluating XPath expressions. Re-registering a prefix will
+    // override the previous definition.
+    void registerNamespace(const std::string& prefix, const std::string& uri);
 
 protected :
 	// the sbw implementation of loadCellml
@@ -74,7 +81,9 @@ protected :
 	DataBlockWriter steadyStateImpl(Module from, DataBlockReader reader);
     // the sbw implementation of the serialise CellML model method
     DataBlockWriter serialiseCellmlFromUrlImpl(Module from, DataBlockReader reader);
+    DataBlockWriter mapXpathToVariableIdImpl(Module from, DataBlockReader reader);
     DataBlockWriter setTolerancesImpl(Module from, DataBlockReader reader);
+    DataBlockWriter registerNamespaceImpl(Module from, DataBlockReader reader);
 
 public:
 	// the registration of methods with sbw
@@ -88,9 +97,11 @@ public:
 		table.addMethod(&CellmlSbw::simulateImpl, "double[][] simulate(double,double,double,int)");
 		table.addMethod(&CellmlSbw::oneStepImpl, "void oneStep(double)");
 		table.addMethod(&CellmlSbw::steadyStateImpl, "void steadyState()");
-		table.addMethod(&CellmlSbw::serialiseCellmlFromUrlImpl, "string serialiseCellmlFromUrl(string)");
+        table.addMethod(&CellmlSbw::serialiseCellmlFromUrlImpl, "string serialiseCellmlFromUrl(string)");
+        table.addMethod(&CellmlSbw::mapXpathToVariableIdImpl, "string mapXpathToVariableId(string)");
         table.addMethod(&CellmlSbw::setTolerancesImpl, "void setTolerances(double, double, int)");
-	}
+        table.addMethod(&CellmlSbw::registerNamespaceImpl, "void registerNamespace(string, string)");
+    }
 
 };
 

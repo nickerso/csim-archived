@@ -15,6 +15,7 @@
 #endif
 
 #include <vector>
+#include <map>
 #include <string>
 
 struct CellMLModel;
@@ -22,6 +23,7 @@ struct Simulation;
 struct Integrator;
 class CellmlCode;
 class ExecutableModel;
+class XmlDoc;
 
 class CSIM_API CellmlSimulator
 {
@@ -30,8 +32,13 @@ public:
 	~CellmlSimulator();
 
 	/**
-	 * Serialise the model from the given URL into a string, making sure the
-	 * xml:base is set appropriately for future resolution of imports.
+     * Serialise the model from the given URL into a string. The model is flattened before serialising
+     * to the string to ensure that the string contains the complete model without requiring future
+     * resolution of imports. The xml:base of the flattened model is set to the given URL for future
+     * reference.
+     *
+     * Note: Internally, we keep a copy of the original (un-flattened) XML document for use in resolving
+     *      XPath expressions. So it is always best to use this method to get the model string.
 	 */
 	std::string serialiseCellmlFromUrl(const std::string& url);
 
@@ -39,6 +46,19 @@ public:
 	 * Load the CellML model from the given string. Returns 0 on success.
 	 */
 	int loadModelString(const std::string& modelString);
+
+    /**
+     * Map an XPath expression to a variable identifier suitable for use with the CellmlSimulator
+     * methods. SED-ML specifies that all XPath expressions resolve to a single DOM node, so invalid
+     * expressions will return an empty string.
+     */
+    std::string mapXpathToVariableId(const std::string xpathExpr);
+
+    /**
+     * Register a namespace to be used when evaluating XPath expressions. Re-registering an existing
+     * prefix will override any previous definition.
+     */
+    void registerNamespace(const std::string& prefix, const std::string& uri);
 
 	/**
 	 * Create a (dummy) simulation definition for this model, setting all variables
@@ -103,10 +123,12 @@ public:
 private:
 	std::string mUrl;
 	std::vector<std::string> mVariableIds;
+    std::map<std::string, std::string> mNamespaces;
 	struct CellMLModel* mModel;
 	struct Simulation* mSimulation;
 	class CellmlCode* mCode;
 	class ExecutableModel* mExecutableModel;
+    class XmlDoc* mXmlDoc;
 	struct Integrator* mIntegrator;
 	double* mBoundCache;
 	double* mRatesCache;

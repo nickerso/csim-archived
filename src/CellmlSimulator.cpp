@@ -19,6 +19,7 @@
 #include "ModelCompiler.hpp"
 #include "ExecutableModel.hpp"
 #include "integrator.hpp"
+#include "xmldoc.hpp"
 
 #ifdef __cplusplus
 extern "C"
@@ -49,9 +50,9 @@ static std::string formatOutputValues(const std::vector<double>& values)
 #endif
 
 CellmlSimulator::CellmlSimulator() :
-	mModel(NULL), mSimulation(NULL), mCode(NULL), mExecutableModel(NULL), mIntegrator(NULL),
-	mBoundCache(NULL), mRatesCache(NULL), mStatesCache(NULL), mConstantsCache(NULL),
-	mAlgebraicCache(NULL), mOutputsCache(NULL)
+    mModel(NULL), mSimulation(NULL), mCode(NULL), mExecutableModel(NULL), mXmlDoc(NULL),
+    mIntegrator(NULL), mBoundCache(NULL), mRatesCache(NULL), mStatesCache(NULL),
+    mConstantsCache(NULL), mAlgebraicCache(NULL), mOutputsCache(NULL)
 {
 	std::cout << "Creating cellml simulator." << std::endl;
 }
@@ -63,6 +64,7 @@ CellmlSimulator::~CellmlSimulator()
 	if (mSimulation) DestroySimulation(&mSimulation);
 	if (mCode) delete mCode;
 	if (mExecutableModel) delete mExecutableModel;
+    if (mXmlDoc) delete mXmlDoc;
 	if (mIntegrator) DestroyIntegrator(&mIntegrator);
 	if (mBoundCache) free(mBoundCache);
 	if (mRatesCache) free(mRatesCache);
@@ -76,7 +78,10 @@ std::string CellmlSimulator::serialiseCellmlFromUrl(const std::string& url)
 {
 	std::cout << "Serialising the model from the URL: " << url.c_str() << std::endl;
 	std::string modelString = modelUrlToString(url);
-	return modelString;
+    // keep hold of the original XML document for use when evaluating XPath expressions.
+    mXmlDoc = new XmlDoc();
+    mXmlDoc->parseDocument(url.c_str());
+    return modelString;
 }
 
 int CellmlSimulator::loadModelString(const std::string& modelString)
@@ -90,6 +95,22 @@ int CellmlSimulator::loadModelString(const std::string& modelString)
 		return 0;
 	}
 	return -1;
+}
+
+std::string CellmlSimulator::mapXpathToVariableId(const std::string xpathExpr)
+{
+    std::string variableId;
+    if (mXmlDoc)
+    {
+        variableId = mXmlDoc->getVariableId(xpathExpr.c_str(), mNamespaces);
+    }
+    else std::cerr << "CellmlSimulator::mapXpathToVariableId - missing XML Document???" << std::endl;
+    return variableId;
+}
+
+void CellmlSimulator::registerNamespace(const std::string& prefix, const std::string& uri)
+{
+    mNamespaces[prefix] = uri;
 }
 
 int CellmlSimulator::createSimulationDefinition()
