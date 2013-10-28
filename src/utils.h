@@ -67,13 +67,13 @@ void setDebugLevel();
 int debugLevel();
 
 #define DEBUG( LEVEL , METHOD , ... )                                   \
-  if (debugLevel() > LEVEL) fprintf(stdout,"debug("METHOD"): "__VA_ARGS__)
+  if (debugLevel() > LEVEL) fprintf(stdout,"debug(" METHOD "): " __VA_ARGS__)
 
 #define ERROR( METHOD , ... ) \
-  fprintf(stderr,"ERROR("METHOD"): "__VA_ARGS__)
+  fprintf(stderr,"ERROR(" METHOD "): " __VA_ARGS__)
 
 #define WARNING( METHOD , ... ) \
-  fprintf(stderr,"WARNING("METHOD"): "__VA_ARGS__)
+  fprintf(stderr,"WARNING(" METHOD "): " __VA_ARGS__)
 
 #define MESSAGE( ... )                          \
   if (!quietSet()) fprintf(stdout,__VA_ARGS__)

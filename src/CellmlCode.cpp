@@ -6,9 +6,12 @@
  */
 #include <string>
 #include <stdio.h>
-//#include <unistd.h>
 #include <cstdlib>
 #include <iostream>
+
+#ifndef _MSC_VER
+#  include <unistd.h>
+#endif
 
 #ifdef _MSC_VER
 #  include <io.h>

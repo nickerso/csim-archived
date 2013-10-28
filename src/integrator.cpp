@@ -490,8 +490,8 @@ static int check_flag(void *flagvalue, const char *funcname, int opt)
 void PrintFinalStats(struct Integrator* integrator)
 {
   void* cvode_mem = integrator->cvode_mem;
-  long int lenrw, leniw, nst, nfe, nsetups, nni, ncfn, netf;
-  long int lenrwLS, leniwLS, nje, nfeLS,npe,nps,ncfl,nli;
+  long int lenrw = -1, leniw = -1, nst = -1, nfe = -1, nsetups = -1, nni = -1, ncfn = -1, netf = -1;
+  long int lenrwLS = -1, leniwLS = -1, nje = -1, nfeLS = -1,npe = -1,nps = -1,ncfl = -1,nli = -1;
   int flag;
 
   flag = CVodeGetWorkSpace(cvode_mem, &lenrw, &leniw);
