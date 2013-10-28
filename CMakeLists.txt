@@ -77,7 +77,7 @@ if(USE_LLVM_RELEASE)
     SET(LLVM_DEFINITIONS "-D__STDC_LIMIT_MACROS;-D__STDC_CONSTANT_MACROS")
     SET(LLVM_INCLUDE_DIRS "${LLVM_INSTALL_DIR}/include")
     SET(LLVM_LIBRARY_DIRS "${LLVM_INSTALL_DIR}/lib")
-    SET(REQ_LLVM_LIBRARIES "LLVMInstrumentation;LLVMJIT;LLVMInterpreter;LLVMX86CodeGen;LLVMAsmParser;LLVMBitWriter;LLVMipo;LLVMLinker;LLVMRuntimeDyld;LLVMExecutionEngine;LLVMAsmPrinter;LLVMSelectionDAG;LLVMX86Desc;LLVMArchive;LLVMMCParser;LLVMCodeGen;LLVMX86AsmPrinter;LLVMX86Info;LLVMBitReader;LLVMScalarOpts;LLVMX86Utils;LLVMInstCombine;LLVMTransformUtils;LLVMipa;LLVMAnalysis;LLVMTarget;LLVMVectorize;LLVMCore;LLVMMC;LLVMObject;LLVMSupport")
+    SET(REQ_LLVM_LIBRARIES "LLVMInstrumentation;LLVMJIT;LLVMInterpreter;LLVMX86CodeGen;LLVMAsmParser;LLVMBitWriter;LLVMipo;LLVMOption;LLVMIRReader;LLVMLinker;LLVMRuntimeDyld;LLVMExecutionEngine;LLVMAsmPrinter;LLVMSelectionDAG;LLVMObjCARCOpts;LLVMX86Desc;LLVMMCParser;LLVMCodeGen;LLVMX86AsmPrinter;LLVMX86Info;LLVMBitReader;LLVMScalarOpts;LLVMX86Utils;LLVMInstCombine;LLVMTransformUtils;LLVMipa;LLVMAnalysis;LLVMTarget;LLVMVectorize;LLVMCore;LLVMMC;LLVMObject;LLVMSupport")
 #    SET(REQ_LLVM_LIBRARIES "LLVMInstrumentation;LLVMJIT;LLVMInterpreter;LLVMX86CodeGen;LLVMAsmParser;LLVMBitWriter;LLVMipo;LLVMLinker;LLVMRuntimeDyld;LLVMExecutionEngine;LLVMAsmPrinter;LLVMSelectionDAG;LLVMX86Desc;LLVMArchive;LLVMMCParser;LLVMCodeGen;LLVMX86AsmPrinter;LLVMX86Info;LLVMBitReader;LLVMScalarOpts;LLVMX86Utils;LLVMInstCombine;LLVMTransformUtils;LLVMipa;LLVMAnalysis;LLVMTarget;LLVMCore;LLVMMC;LLVMObject;LLVMSupport")
 
     if( ${OPERATING_SYSTEM} STREQUAL "linux" )
@@ -127,7 +127,7 @@ set(REQ_CLANG_LIBRARIES
     clangStaticAnalyzerCheckers
     clangStaticAnalyzerCore
     clangAnalysis
-    clangRewrite
+    clangRewriteCore
     clangAST
     clangLex
     clangBasic

@@ -17,11 +17,11 @@
 #include "clang/Driver/Tool.h"
 #include "clang/Frontend/CompilerInvocation.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/DiagnosticOptions.h"
+#include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 
-#include "llvm/Module.h"
+#include "llvm/IR/Module.h"
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ExecutionEngine/JIT.h"
@@ -30,6 +30,7 @@
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Host.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/TargetSelect.h"
 using namespace clang;
@@ -42,12 +43,12 @@ using namespace clang::driver;
 // GetMainExecutable (since some platforms don't support taking the
 // address of main, and some platforms can't implement GetMainExecutable
 // without being given the address of a function in the main executable).
-llvm::sys::Path GetExecutablePath(const char *Argv0)
+std::string GetExecutablePath(const char *Argv0)
 {
 	// This just needs to be some symbol in the binary; C++ doesn't
 	// allow taking the address of ::main however.
 	void *MainAddr = (void*) (intptr_t) GetExecutablePath;
-	return llvm::sys::Path::GetMainExecutable(Argv0, MainAddr);
+	return llvm::sys::fs::getMainExecutable(Argv0, MainAddr);
 }
 
 ModelCompiler::ModelCompiler(const char* executable, bool verbose, bool debug) :
@@ -65,15 +66,16 @@ ModelCompiler::~ModelCompiler()
 llvm::Module* ModelCompiler::compileModel(const char* filename)
 {
 	void *MainAddr = (void*) (intptr_t) GetExecutablePath;
-	llvm::sys::Path Path = GetExecutablePath(mExecutable.c_str());
-	TextDiagnosticPrinter *DiagClient = new TextDiagnosticPrinter(llvm::errs(),
-			DiagnosticOptions());
+	std::string Path = GetExecutablePath(mExecutable.c_str());
+	DiagnosticOptions diagOpts;
+	TextDiagnosticPrinter *DiagClient = new TextDiagnosticPrinter(llvm::errs(), &diagOpts
+			);
 
 	llvm::IntrusiveRefCntPtr < DiagnosticIDs > DiagID(new DiagnosticIDs());
-	DiagnosticsEngine Diags(DiagID, DiagClient);
-	Driver TheDriver(Path.str(), llvm::sys::getDefaultTargetTriple(), "a.out", /*IsProduction=*/
-			false, Diags);
-//xx    Driver TheDriver(Path.str(), llvm::sys::getHostTriple(), "a.out", /*IsProduction=*/
+	DiagnosticsEngine Diags(DiagID, &diagOpts);
+	Driver TheDriver(Path, llvm::sys::getDefaultTargetTriple(), "a.out", /*IsProduction=*/ //false, 
+	             Diags);
+//xx    Driver TheDriver(Path, llvm::sys::getHostTriple(), "a.out", /*IsProduction=*/
 //xx            false, Diags);
     TheDriver.setTitle("clang compiler");
 
@@ -131,8 +133,8 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 	Clang.setInvocation(CI.take());
 
 	// Create the compilers actual diagnostics engine.
-	Clang.createDiagnostics(int(CCArgs.size()),
-			const_cast<char**>(CCArgs.data()));
+	//Clang.createDiagnostics(int(CCArgs.size()), const_cast<char**>(CCArgs.data()));
+	Clang.createDiagnostics();
 	if (!Clang.hasDiagnostics())
 		return 0;
 
@@ -163,13 +165,13 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 int ModelCompiler::Compile(const char* executable, const char* filename, bool verbose)
 {
 	void *MainAddr = (void*) (intptr_t) GetExecutablePath;
-	llvm::sys::Path Path = GetExecutablePath(executable);
+	std::string Path = GetExecutablePath(executable);
 	TextDiagnosticPrinter *DiagClient = new TextDiagnosticPrinter(llvm::errs(),
 			DiagnosticOptions());
 
 	llvm::IntrusiveRefCntPtr < DiagnosticIDs > DiagID(new DiagnosticIDs());
 	DiagnosticsEngine Diags(DiagID, DiagClient);
-	Driver TheDriver(Path.str(), llvm::sys::getDefaultTargetTriple(), "a.out", /*IsProduction=*/
+	Driver TheDriver(Path, llvm::sys::getDefaultTargetTriple(), "a.out", /*IsProduction=*/
 			false, Diags);
 	TheDriver.setTitle("clang compiler");
 
