@@ -146,7 +146,7 @@ else(WIN32)
     add_definitions("-Wall" "-Werror")
     # TODO: need a way to determine when lapack and blas are required.
     #set(PLATFORM_LIBS ${PLATFORM_LIBS} "lapack" "blas" "m")
-    set(PLATFORM_LIBS ${PLATFORM_LIBS} "m")
+    set(PLATFORM_LIBS ${PLATFORM_LIBS} "m" "termcap")
 endif(WIN32)
 ADD_DEFINITIONS(
    ${LIBXML2_DEFINITIONS}

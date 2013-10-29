@@ -67,9 +67,9 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 {
 	void *MainAddr = (void*) (intptr_t) GetExecutablePath;
 	std::string Path = GetExecutablePath(mExecutable.c_str());
-	DiagnosticOptions diagOpts;
-	TextDiagnosticPrinter *DiagClient = new TextDiagnosticPrinter(llvm::errs(), &diagOpts
-			);
+    DiagnosticOptions diagOpts;
+//	TextDiagnosticPrinter *DiagClient = new TextDiagnosticPrinter(llvm::errs(), &diagOpts
+//			);
 
 	llvm::IntrusiveRefCntPtr < DiagnosticIDs > DiagID(new DiagnosticIDs());
 	DiagnosticsEngine Diags(DiagID, &diagOpts);
@@ -101,7 +101,8 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 	{
 		llvm::SmallString < 256 > Msg;
 		llvm::raw_svector_ostream OS(Msg);
-		C->PrintJob(OS, C->getJobs(), "; ", true);
+        C->getJobs().Print(OS, ";", true);
+        //C->PrintJob(OS, C->getJobs(), "; ", true);
 		Diags.Report(diag::err_fe_expected_compiler_job) << OS.str();
 		return 0;
 	}
@@ -123,8 +124,9 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 	// Show the invocation, with -v.
 	if (CI->getHeaderSearchOpts().Verbose)
 	{
-		llvm::errs() << "clang invocation:\n";
-		C->PrintJob(llvm::errs(), C->getJobs(), "\n", true);
+        llvm::errs() << "clang invocation:\n";
+        C->getJobs().Print(llvm::errs(), "\n", true);
+        //C->PrintJob(llvm::errs(), C->getJobs(), "\n", true);
 		llvm::errs() << "\n";
 	}
 

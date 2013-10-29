@@ -355,7 +355,7 @@ static int runSimulation(struct Simulation* simulation, ExecutableModel* em)
 			printf("\n");
 			while (1)
 			{
-				DEBUG(5, "runSimulation", "tout = "REAL_FORMAT"\n", tout);
+                DEBUG(5, "runSimulation", "tout = " REAL_FORMAT "\n", tout);
 				double t;
 				iout++;
 				TIME_FUNCTION_CALL(integrationTimes, intTimer, code,
@@ -381,7 +381,7 @@ static int runSimulation(struct Simulation* simulation, ExecutableModel* em)
 					{
 						DEBUG(0, "runSimulation",
 								"Error appending integration results "
-								"at time: "REAL_FORMAT"\n", tout);
+                                "at time: " REAL_FORMAT "\n", tout);
 						break;
 					}
 				}
@@ -390,7 +390,7 @@ static int runSimulation(struct Simulation* simulation, ExecutableModel* em)
 					DEBUG(
 							0,
 							"runSimulation",
-							"Error integrating at time: "REAL_FORMAT"\n", tout);
+                            "Error integrating at time: " REAL_FORMAT "\n", tout);
 					break;
 				}
 			}
@@ -400,18 +400,18 @@ static int runSimulation(struct Simulation* simulation, ExecutableModel* em)
 			double total = user + system;
 			double wall = getWallTime(timer);
 			DestroyTimer(&timer);
-			MESSAGE("  Wall clock time : "REAL_FORMAT" s\n", wall);
+            MESSAGE("  Wall clock time : " REAL_FORMAT " s\n", wall);
 			MESSAGE(
-					"    (integration "REAL_FORMAT" s)\n", integrationTimes[2]);
+                    "    (integration " REAL_FORMAT " s)\n", integrationTimes[2]);
 			MESSAGE(
-					"    (data store  "REAL_FORMAT" s)\n", dataStoreTimes[2]);
+                    "    (data store  " REAL_FORMAT " s)\n", dataStoreTimes[2]);
 			MESSAGE(
-					"  CPU time        : "REAL_FORMAT" s "
-					"(user "REAL_FORMAT"/system "REAL_FORMAT")\n", total, user, system);
+                    "  CPU time        : " REAL_FORMAT " s "
+                    "(user " REAL_FORMAT "/system " REAL_FORMAT ")\n", total, user, system);
 			MESSAGE(
-					"    (integration "REAL_FORMAT" s)\n", integrationTimes[0]+integrationTimes[1]);
+                    "    (integration " REAL_FORMAT " s)\n", integrationTimes[0]+integrationTimes[1]);
 			MESSAGE(
-					"    (data store  "REAL_FORMAT" s)\n", dataStoreTimes[0]+dataStoreTimes[1]);
+                    "    (data store  " REAL_FORMAT " s)\n", dataStoreTimes[0]+dataStoreTimes[1]);
 			if (!quietSet())
 			{
 				printMemoryStats();

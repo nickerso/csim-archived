@@ -37,7 +37,7 @@ char* getVersion(const char* tool,const char* toolVersion)
   return(string);
 }
 
-const char const * getSundialsVersion()
+const char * getSundialsVersion()
 {
   return SundialsVersion;
 }
