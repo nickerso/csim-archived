@@ -50,4 +50,4 @@ else()
     ${ZLIB_LIBRARIES}
     ${PLATFORM_LIBS})
 endif()
-install(TARGETS cellmlsbw DESTINATION bin)
+install(TARGETS cellmlsbw OPTIONAL DESTINATION bin)

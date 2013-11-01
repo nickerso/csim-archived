@@ -240,6 +240,14 @@ SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/version.c
 
 #SET(CMAKE_INSTALL_RPATH "\$ORIGIN/")
 
+
+# http://stackoverflow.com/questions/17164731/installing-only-one-target-and-its-dependencies-out-of-a-complex-project-with
+# Remove dependency of "install" target to "all" target (once, in the main CMakeLists.txt):
+set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
+# Set to OPTIONAL installation of all targets you do not want to always build:
+# install(TARGETS <<targetname>> DESTINATION . OPTIONAL)
+
+
 # add the automatically determined parts of the RPATH
 # which point to directories outside the build tree to the install RPATH
 #SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH false)
