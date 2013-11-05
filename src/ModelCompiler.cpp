@@ -68,8 +68,8 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 	void *MainAddr = (void*) (intptr_t) GetExecutablePath;
 	std::string Path = GetExecutablePath(mExecutable.c_str());
     DiagnosticOptions diagOpts;
-//	TextDiagnosticPrinter *DiagClient = new TextDiagnosticPrinter(llvm::errs(), &diagOpts
-//			);
+    /*TextDiagnosticPrinter *DiagClient = */new TextDiagnosticPrinter(llvm::errs(), &diagOpts
+            );
 
 	llvm::IntrusiveRefCntPtr < DiagnosticIDs > DiagID(new DiagnosticIDs());
 	DiagnosticsEngine Diags(DiagID, &diagOpts);
@@ -96,8 +96,8 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 
 	// We expect to get back exactly one command job, if we didn't something
 	// failed. Extract that job from the compilation.
-	const driver::JobList &Jobs = C->getJobs();
-	if (Jobs.size() != 1 || !isa < driver::Command > (*Jobs.begin()))
+    const driver::JobList &Jobs = C->getJobs();
+    if (Jobs.size() != 1 || !isa < driver::Command > (*Jobs.begin()))
 	{
 		llvm::SmallString < 256 > Msg;
 		llvm::raw_svector_ostream OS(Msg);
