@@ -52,19 +52,28 @@ public:
      * methods. SED-ML specifies that all XPath expressions resolve to a single DOM node, so invalid
      * expressions will return an empty string.
      */
-    std::string mapXpathToVariableId(const std::string xpathExpr);
-
-    /**
-     * Register a namespace to be used when evaluating XPath expressions. Re-registering an existing
-     * prefix will override any previous definition.
-     */
-    void registerNamespace(const std::string& prefix, const std::string& uri);
+    std::string mapXpathToVariableId(const std::string& xpathExpr,
+                                     const std::map<std::string, std::string>& namespaces);
 
 	/**
-	 * Create a (dummy) simulation definition for this model, setting all variables
-	 * in the top-level model as output variables. Returns 0 on success.
+     * Create a (dummy) simulation definition for this model. Returns 0 on success.
 	 */
 	int createSimulationDefinition();
+
+    /**
+     * Sets all variables in the top-level model as output variables. Since we work with the flattened model
+     * this will be all variables?
+     * @return zero on success.
+     */
+    int setAllVariablesOutput();
+
+    /**
+     * Add the given variable to the list of output variables for this simulation instance.
+     * @param variableId The ID (componentName.variableName) for the variable to add.
+     * @param columnIndex The index of this variable in the output array (first index = 1).
+     * @return zero on success.
+     */
+    int addOutputVariable(const std::string& variableId, int columnIndex);
 
 	/**
 	 * Generate code and compile the model into an executable object. Return 0 on success.
@@ -122,8 +131,7 @@ public:
 
 private:
 	std::string mUrl;
-	std::vector<std::string> mVariableIds;
-    std::map<std::string, std::string> mNamespaces;
+    std::vector<std::string> mVariableIds;
 	struct CellMLModel* mModel;
 	struct Simulation* mSimulation;
 	class CellmlCode* mCode;

@@ -171,7 +171,7 @@ void* XmlDoc::getCSimOutputVariables()
     return list;
 }
 
-std::string XmlDoc::getVariableId(const char* xpathExpr, std::map<std::string, std::string>& namespaces)
+std::string XmlDoc::getVariableId(const char* xpathExpr, const std::map<std::string, std::string>& namespaces)
 {
     std::string id;
     xmlDocPtr doc = static_cast<xmlDocPtr>(mXmlDocPtr);
@@ -211,18 +211,30 @@ static xmlNodeSetPtr executeXPath(xmlDocPtr doc, const xmlChar* xpathExpr, const
         fprintf(stderr, "Error: unable to create new XPath context\n");
         return NULL;
     }
-    /* Register namespaces - always CSIM by default */
-    if (!(xmlXPathRegisterNs(xpathCtx, BAD_CAST "csim", BAD_CAST CSIM_SIMULATION_NS) == 0))
+    /* Register namespaces - always CSIM by default if no namespaces provided */
+    if (namespaces.empty())
     {
-        fprintf(stderr, "Error: unable to register default CSim namespace\n");
-        return NULL;
+        std::cout << "No namespaces provided, so registering the default CSim namespace: " << CSIM_SIMULATION_NS
+                  << std::endl;
+        if (!(xmlXPathRegisterNs(xpathCtx, BAD_CAST "csim", BAD_CAST CSIM_SIMULATION_NS) == 0))
+        {
+            fprintf(stderr, "Error: unable to register default CSim namespace\n");
+            return NULL;
+        }
     }
     for (auto it=namespaces.begin(); it!=namespaces.end(); ++it)
     {
-        if (!(xmlXPathRegisterNs(xpathCtx, BAD_CAST it->first.c_str(), BAD_CAST it->second.c_str()) == 0))
+        // As per the author of libxml2, we ignore it if the caller is trying to override the default namespace:
+        //    You cannot define a default namespace for XPath, period, don't
+        //    try you can't, the XPath spec does not allow it.
+        if (it->first.length() > 0)
         {
-            fprintf(stderr, "Error: unable to register default namespace\n");
-            return NULL;
+            if (!(xmlXPathRegisterNs(xpathCtx, BAD_CAST it->first.c_str(), BAD_CAST it->second.c_str()) == 0))
+            {
+                fprintf(stderr, "Error: unable to register namespace: %s => %s\n", it->first.c_str(),
+                        it->second.c_str());
+                return NULL;
+            }
         }
     }
 

@@ -78,6 +78,7 @@ std::string CellmlSimulator::serialiseCellmlFromUrl(const std::string& url)
 {
 	std::cout << "Serialising the model from the URL: " << url.c_str() << std::endl;
 	std::string modelString = modelUrlToString(url);
+
     // keep hold of the original XML document for use when evaluating XPath expressions.
     mXmlDoc = new XmlDoc();
     mXmlDoc->parseDocument(url.c_str());
@@ -97,20 +98,16 @@ int CellmlSimulator::loadModelString(const std::string& modelString)
 	return -1;
 }
 
-std::string CellmlSimulator::mapXpathToVariableId(const std::string xpathExpr)
+std::string CellmlSimulator::mapXpathToVariableId(const std::string& xpathExpr,
+                                                  const std::map<std::string, std::string>& namespaces)
 {
     std::string variableId;
     if (mXmlDoc)
     {
-        variableId = mXmlDoc->getVariableId(xpathExpr.c_str(), mNamespaces);
+        variableId = mXmlDoc->getVariableId(xpathExpr.c_str(), namespaces);
     }
     else std::cerr << "CellmlSimulator::mapXpathToVariableId - missing XML Document???" << std::endl;
     return variableId;
-}
-
-void CellmlSimulator::registerNamespace(const std::string& prefix, const std::string& uri)
-{
-    mNamespaces[prefix] = uri;
 }
 
 int CellmlSimulator::createSimulationDefinition()
@@ -134,21 +131,57 @@ int CellmlSimulator::createSimulationDefinition()
 	simulationSetBvarMaxStep(mSimulation, 0.01);
 	simulationSetBvarTabStep(mSimulation, 0.1);
 
-	void* list = createOutputVariablesForAllLocalComponents(mModel, mVariableIds);
-	if (list)
-	{
-		simulationSetOutputVariables(mSimulation, list);
-		outputVariablesDestroy(list);
-	}
-	else
-	{
-		std::cerr << "CellmlSimulator::createSimulationDefinition: Missing simulation output variables."
-				<< std::endl;
-		DestroySimulation(&mSimulation);
-		mSimulation = NULL;
-		return -2;
-	}
+    // and the initial empty output variable list
+    void* list = outputVariablesCreate();
+    simulationSetOutputVariables(mSimulation, list);
+    outputVariablesDestroy(list);
+
 	return 0;
+}
+
+int CellmlSimulator::setAllVariablesOutput()
+{
+    if (!mSimulation)
+    {
+        std::cerr << "CellmlSimulator::setAllVariablesOutput: Error, need "
+                     "a simulation before creating simulation outputs" << std::endl;
+        return -1;
+    }
+    void* list = createOutputVariablesForAllLocalComponents(mModel, mVariableIds);
+    if (list)
+    {
+        simulationSetOutputVariables(mSimulation, list);
+        outputVariablesDestroy(list);
+    }
+    else
+    {
+        std::cerr << "CellmlSimulator::createSimulationDefinition: Missing simulation output variables."
+                  << std::endl;
+        DestroySimulation(&mSimulation);
+        mSimulation = NULL;
+        return -2;
+    }
+    return 0;
+}
+
+int CellmlSimulator::addOutputVariable(const std::string &variableId, int columnIndex)
+{
+    /**
+      * FIXME: the setAllVariablesOutput method also sets up mVariableIds, which is needed in some of the
+      *         other CellmlSimulator methods. Here we ignore this for now.
+      */
+    if (!mSimulation)
+    {
+        std::cerr << "CellmlSimulator::addOutputVariable: Error, need "
+                     "a simulation before adding simulation outputs" << std::endl;
+        return -1;
+    }
+    void* list = simulationGetOutputVariables(mSimulation);
+    unsigned int pos = variableId.find(".");
+    outputVariablesAppendVariable(list, variableId.substr(0, pos).c_str(), variableId.substr(pos+1).c_str(),
+                                  columnIndex);
+    //outputVariablesPrint(list, stdout, "***");
+    return 0;
 }
 
 int CellmlSimulator::compileModel()

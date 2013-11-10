@@ -13,7 +13,7 @@ public:public:
     std::string getTextContent(const char* xpathExpr);
     int getDoubleContent(const char* xpathExpr, double* value);
     void* getCSimOutputVariables();
-    std::string getVariableId(const char* xpathExpr, std::map<std::string, std::string> &namespaces);
+    std::string getVariableId(const char* xpathExpr, const std::map<std::string, std::string> &namespaces);
 
 private:
     void* mXmlDocPtr;
