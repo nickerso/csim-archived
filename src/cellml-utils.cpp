@@ -179,7 +179,7 @@ int updateModelInitialValues(const char* inputURI,const char* outputFile,
     RETURN_INTO_OBJREF(element,iface::dom::Element,modelDE->domElement());
     // FIXME: want to get rid of the xml:base attribute as it generally
     //        confuses things
-    element->removeAttributeNS(L""XML_NS,L"base");
+    element->removeAttributeNS(L"" XML_NS,L"base");
     DECLARE_QUERY_INTERFACE(node,element,dom::Node);
     RETURN_INTO_WSTRING(str,cb->serialiseNode(node));
     if (outputFile)

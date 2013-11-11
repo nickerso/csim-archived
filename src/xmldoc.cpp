@@ -1,5 +1,6 @@
 #include <map>
 #include <string>
+#include <cstring>
 #include <iostream>
 #include <vector>
 #include <libxml/parser.h>

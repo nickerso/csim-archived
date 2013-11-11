@@ -132,6 +132,7 @@ set(REQ_CLANG_LIBRARIES
     clangLex
     clangBasic
     clangEdit
+    clangLex
 )
 
 # Set compiler flags
@@ -146,8 +147,13 @@ else(WIN32)
     add_definitions("-Wall" "-Werror")
     # TODO: need a way to determine when lapack and blas are required.
     #set(PLATFORM_LIBS ${PLATFORM_LIBS} "lapack" "blas" "m")
-    set(PLATFORM_LIBS ${PLATFORM_LIBS} "m" "termcap")
+    set(PLATFORM_LIBS ${PLATFORM_LIBS} "m")
 endif(WIN32)
+
+if( ${OPERATING_SYSTEM} STREQUAL "darwin" )
+    set(PLATFORM_LIBS ${PLATFORM_LIBS} "termcap")
+endif( ${OPERATING_SYSTEM} STREQUAL "darwin" )
+
 ADD_DEFINITIONS(
    ${LIBXML2_DEFINITIONS}
 )
