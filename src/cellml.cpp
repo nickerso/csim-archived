@@ -1658,9 +1658,12 @@ void annotateCellMLModelOutputs(struct CellMLModel* model, void* outputVariables
 			model->model->localComponents());
 	DEBUG(0, "annotateCellMLModelOutputs", "Got the local components\n");
 	int l = outputVariablesGetLength(outputVariables);
+    std::cout << "There are " << l << " output variables" << std::endl;
 	for (int i = 0; i < l; ++i)
 	{
+        std::cout << "Output variable: " << i << "\n";
 		RETURN_INTO_WSTRING(cname, string2wstring(outputVariablesGetComponent(outputVariables, i)));
+        std::wcout << L"\tcomponent: " << cname << L"\n";
 		RETURN_INTO_OBJREF(component, iface::cellml_api::CellMLComponent,
 				localComponents->getComponent(cname.c_str()));
 		if (component)
