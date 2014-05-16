@@ -45,6 +45,7 @@
 #include <vector>
 #include <list>
 #include <algorithm>
+#include <regex>
 
 #include <IfaceCellML_APISPEC.hxx>
 #include <IfaceCCGS.hxx>
@@ -75,6 +76,27 @@ struct CellMLModel
   iface::cellml_services::AnnotationSet* annotationSet;
   char* uri;
 };
+
+static bool findRegularExpression(const std::wstring& source, const std::wstring& re)
+{
+    //std::wcout << L"source = **" << source.c_str() << L"**\n";
+    std::wregex regexp(re);
+    //if (std::regex_search(source, regexp)) std::wcout << L"  -- MATCH --\n";
+    //else std::wcout << L"  ++ NO MATCH ++\n";
+    return std::regex_search(source, regexp);
+}
+
+static std::vector<std::wstring>&
+splitString(const std::wstring &s, wchar_t delim, std::vector<std::wstring>& elems)
+{
+    std::wstringstream ss(s);
+    std::wstring item;
+    while(std::getline(ss, item, delim))
+    {
+        elems.push_back(item);
+    }
+    return elems;
+}
 
 static std::vector<std::string>&
 splitString(const std::string &s, char delim, std::vector<std::string>& elems)
@@ -925,10 +947,34 @@ writeCode(iface::cellml_services::CodeInformation* cci,
    *              an initial_value attribute, and any variables & rates
    *              which follow.
    */
+  /*
+   * We actually need to split the "constants" into actual constants (variable = value) and computed
+   * constants, i.e., ones that are thought to be constant in the model but need to have their value updated
+   * if any of the actual constants have their value updated. Based on code from OpenCOR (https://github.com/opencor/opencor/blob/d161b8c721764157717a5089e36ccde5b1327d2e/src/plugins/support/CellMLSupport/src/cellmlfileruntime.cpp#L966).
+   */
   frag = cci->initConstsString();
+  std::wstring constantsString;
+  std::wstring computedConstantsString;
+  std::vector<std::wstring> constantAssignments;
+  constantAssignments = splitString(frag, L'\n', constantAssignments);
+  for (auto& s: constantAssignments)
+  {
+      //if (findRegularExpression(s, L"^(CONSTANTS|RATES|STATES)\\[[0-9]*\\] = "
+      //                          L"[+-]?[0-9]*\\.?[0-9]+([eE][+-]?[0-9]+)?;$"))
+      if (findRegularExpression(s, L"^(CONSTANTS|STATES|RATES)\\[[0-9]*\\] = [+-]?[0-9]+\\.?[0-9]*([eE][+-]?[0-9]+)?;"))
+      {
+          constantsString += s;
+          constantsString += L"\n";
+      }
+      else
+      {
+          computedConstantsString += s;
+          computedConstantsString += L"\n";
+      }
+  }
   code += L"void SetupFixedConstants(double* CONSTANTS,double* RATES,"
     L"double* STATES)\n{\n";
-  code += frag;
+  code += constantsString;
   code += L"}\n";
 
   /* rates      - All rates which are not static.
@@ -936,6 +982,8 @@ writeCode(iface::cellml_services::CodeInformation* cci,
   frag = cci->ratesString();
   code += L"void ComputeRates(double VOI,double* STATES,double* RATES,"
     L"double* CONSTANTS,double* ALGEBRAIC)\n{\n";
+  // add the computed constants in here for now since I'm lazy.
+  code += computedConstantsString;
   code += frag;
   code += L"}\n";
 
@@ -947,6 +995,8 @@ writeCode(iface::cellml_services::CodeInformation* cci,
   frag = cci->variablesString();
   code += L"void EvaluateVariables(double VOI,double* CONSTANTS,"
     L"double* RATES, double* STATES, double* ALGEBRAIC)\n{\n";
+  // also add the computed constants in here for now since I'm lazy.
+  code += computedConstantsString;
   code += frag;
   code += L"}\n";
   
