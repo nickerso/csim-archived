@@ -184,7 +184,7 @@ int CellmlSimulator::addOutputVariable(const std::string &variableId, int column
     return 0;
 }
 
-int CellmlSimulator::compileModel()
+int CellmlSimulator::compileModel(bool saveGeneratedCode)
 {
 	int returnCode;
 	if (!mModel || !mSimulation)
@@ -194,7 +194,7 @@ int CellmlSimulator::compileModel()
 		return -1;
 	}
 
-	mCode = new CellmlCode();
+    mCode = new CellmlCode(saveGeneratedCode);
 	returnCode = mCode->createCodeForSimulation(mModel, mSimulation, /*generateDebugCode*/false);
 	if (returnCode != 0)
 	{

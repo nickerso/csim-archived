@@ -76,9 +76,11 @@ public:
     int addOutputVariable(const std::string& variableId, int columnIndex);
 
 	/**
-	 * Generate code and compile the model into an executable object. Return 0 on success.
+     * Generate code and compile the model into an executable object.
+     * @param saveGeneratedCode If true, the generated code will be not be deleted (defaults to false).
+     * @return zero on success.
 	 */
-	int compileModel();
+    int compileModel(bool saveGeneratedCode = false);
 
 	/**
 	 * Checkpoint (cache) the current model values for future reference/resetting. Return 0 on success.
