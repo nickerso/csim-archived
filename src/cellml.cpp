@@ -45,7 +45,7 @@
 #include <vector>
 #include <list>
 #include <algorithm>
-#include <regex>
+#include <pcrecpp.h>
 
 #include <IfaceCellML_APISPEC.hxx>
 #include <IfaceCCGS.hxx>
@@ -60,6 +60,7 @@
 #include "cellml-utils.h"
 #include "cellml.hpp"
 #include "utils.hxx"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -79,11 +80,16 @@ struct CellMLModel
 
 static bool findRegularExpression(const std::wstring& source, const std::wstring& re)
 {
-    //std::wcout << L"source = **" << source.c_str() << L"**\n";
-    std::wregex regexp(re);
-    //if (std::regex_search(source, regexp)) std::wcout << L"  -- MATCH --\n";
-    //else std::wcout << L"  ++ NO MATCH ++\n";
-    return std::regex_search(source, regexp);
+    bool returnCode = false;
+    std::string sourceString = wstring2string(source.c_str());
+    std::string regularExpressionString = wstring2string(re.c_str());
+    pcrecpp::RE regexp(regularExpressionString);
+    returnCode = regexp.PartialMatch(sourceString);
+    if (returnCode) std::cout << "RegEx: " << regularExpressionString << ";; MATCHED: "
+                              << sourceString << std::endl;
+    else std::cout << "RegEx: " << regularExpressionString << ";; DID NOT MATCH: "
+                   << sourceString << std::endl;
+    return returnCode;
 }
 
 static std::vector<std::wstring>&
@@ -961,7 +967,8 @@ writeCode(iface::cellml_services::CodeInformation* cci,
   {
       //if (findRegularExpression(s, L"^(CONSTANTS|RATES|STATES)\\[[0-9]*\\] = "
       //                          L"[+-]?[0-9]*\\.?[0-9]+([eE][+-]?[0-9]+)?;$"))
-      if (findRegularExpression(s, L"^(CONSTANTS|STATES|RATES)\\[[0-9]*\\] = [+-]?[0-9]+\\.?[0-9]*([eE][+-]?[0-9]+)?;"))
+      if (findRegularExpression(s, L"^(CONSTANTS|RATES|STATES)\\[[0-9]+\\] = "
+                                L"[+-]?[0-9]+\\.?[0-9]*([eE][+-]?[0-9]+)?;"))
       {
           constantsString += s;
           constantsString += L"\n";

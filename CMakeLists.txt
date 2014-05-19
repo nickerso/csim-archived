@@ -81,7 +81,7 @@ if(USE_LLVM_RELEASE)
 #    SET(REQ_LLVM_LIBRARIES "LLVMInstrumentation;LLVMJIT;LLVMInterpreter;LLVMX86CodeGen;LLVMAsmParser;LLVMBitWriter;LLVMipo;LLVMLinker;LLVMRuntimeDyld;LLVMExecutionEngine;LLVMAsmPrinter;LLVMSelectionDAG;LLVMX86Desc;LLVMArchive;LLVMMCParser;LLVMCodeGen;LLVMX86AsmPrinter;LLVMX86Info;LLVMBitReader;LLVMScalarOpts;LLVMX86Utils;LLVMInstCombine;LLVMTransformUtils;LLVMipa;LLVMAnalysis;LLVMTarget;LLVMCore;LLVMMC;LLVMObject;LLVMSupport")
 
     if( ${OPERATING_SYSTEM} STREQUAL "linux" )
-        SET(PLATFORM_LIBS ${PLATFORM_LIBS} "dl" "pthread")
+        SET(PLATFORM_LIBS ${PLATFORM_LIBS} "dl" "pthread" "tinfo")
     endif()
 
 else()
@@ -151,8 +151,12 @@ else(WIN32)
 endif(WIN32)
 
 if( ${OPERATING_SYSTEM} STREQUAL "darwin" )
-    set(PLATFORM_LIBS ${PLATFORM_LIBS} "termcap")
+    set(PLATFORM_LIBS ${PLATFORM_LIBS} "termcap" "pcrecpp" "pcre")
 endif( ${OPERATING_SYSTEM} STREQUAL "darwin" )
+
+if( ${OPERATING_SYSTEM} STREQUAL "linux" )
+    set(PLATFORM_LIBS ${PLATFORM_LIBS} "pcrecpp" "pcre")
+endif( ${OPERATING_SYSTEM} STREQUAL "linux" )
 
 ADD_DEFINITIONS(
    ${LIBXML2_DEFINITIONS}
@@ -382,6 +386,7 @@ endif()
 # An alternative is the do a configure_file() on a script and use install(SCRIPT  ...).
 INSTALL(CODE "
     include(BundleUtilities)
+    SET(BU_CHMOD_BUNDLE_ITEMS ON)
     fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")
     " COMPONENT Runtime)
 
