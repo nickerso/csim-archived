@@ -85,10 +85,12 @@ static bool findRegularExpression(const std::wstring& source, const std::wstring
     std::string regularExpressionString = wstring2string(re.c_str());
     pcrecpp::RE regexp(regularExpressionString);
     returnCode = regexp.PartialMatch(sourceString);
+    /*
     if (returnCode) std::cout << "RegEx: " << regularExpressionString << ";; MATCHED: "
                               << sourceString << std::endl;
     else std::cout << "RegEx: " << regularExpressionString << ";; DID NOT MATCH: "
                    << sourceString << std::endl;
+    */
     return returnCode;
 }
 

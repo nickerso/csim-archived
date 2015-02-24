@@ -29,7 +29,7 @@ endif()
 # Set version information in a config.h file
 set(CSim_VERSION_MAJOR "0")
 set(CSim_VERSION_MINOR "4")
-set(CSim_VERSION_PATCH "5")
+set(CSim_VERSION_PATCH "6")
 configure_file(
   "${PROJECT_SOURCE_DIR}/src/csim-config.h.in"
   "${PROJECT_BINARY_DIR}/csim-config.h"
@@ -157,6 +157,20 @@ endif( ${OPERATING_SYSTEM} STREQUAL "darwin" )
 if( ${OPERATING_SYSTEM} STREQUAL "linux" )
     set(PLATFORM_LIBS ${PLATFORM_LIBS} "pcrecpp" "pcre")
 endif( ${OPERATING_SYSTEM} STREQUAL "linux" )
+
+if( ${OPERATING_SYSTEM} STREQUAL "windows" )
+    FIND_PATH(PCRECPP_INCLUDE_DIR pcrecpp.h
+        ${CSIM_DEPENDENCY_DIR}/include
+    )
+    FIND_LIBRARY(PCRE_LIBRARY pcre
+        ${CSIM_DEPENDENCY_DIR}/lib
+    )
+    FIND_LIBRARY(PCRECPP_LIBRARY pcrecpp
+        ${CSIM_DEPENDENCY_DIR}/lib
+    )
+    INCLUDE_DIRECTORIES(${PCRECPP_INCLUDE_DIR})
+    set(PLATFORM_LIBS ${PLATFORM_LIBS} ${PCRECPP_LIBRARY} ${PCRE_LIBRARY})
+endif( ${OPERATING_SYSTEM} STREQUAL "windows" )
 
 ADD_DEFINITIONS(
    ${LIBXML2_DEFINITIONS}
@@ -371,6 +385,10 @@ set(DIRS
     ${LIBXML2_SEARCH_DIR}
     ${LIBXML2_BIN_DIR}
 )
+IF(WIN32)
+  get_filename_component(PCRE_SEARCH_DIR ${PCRECPP_LIBRARY} PATH)
+  set(DIRS ${DIRS} "${PCRE_SEARCH_DIR}/../bin")
+ENDIF(WIN32)
 message(STATUS "DIRS = ${DIRS}")
 
 OPTION(BUILD_SBW_MODULE "Build SBW Module" OFF)
