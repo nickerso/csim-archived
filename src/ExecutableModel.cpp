@@ -23,9 +23,8 @@
 
 #include "llvm/IR/Module.h"
 #include "llvm/IR/DerivedTypes.h"
-#include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/SmallString.h"
-#include "llvm/ExecutionEngine/JIT.h"
+#include "llvm/ExecutionEngine/MCJIT.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/ManagedStatic.h"
@@ -69,7 +68,8 @@ int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename, d
         return -2;
     }
 
-    llvm::Module* compiledModel = compiler->compileModel(filename);
+    std::unique_ptr<llvm::Module> compiledModel = compiler->compileModel(filename);
+
     if (!compiledModel)
     {
         std::cerr << "Error compiling model" << std::endl;
@@ -79,12 +79,10 @@ int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename, d
     std::string Error;
 
 	// This takes over managing the compiledModel object.
-	mEE = llvm::ExecutionEngine::createJIT(compiledModel, &Error);
-	if (!mEE)
-	{
-		llvm::errs() << "unable to make execution engine: " << Error << "\n";
-        return -3;
-	}
+    mEE = std::unique_ptr<llvm::ExecutionEngine>(llvm::EngineBuilder(std::move(compiledModel))
+            .setEngineKind(llvm::EngineKind::Either)
+            .setErrorStr(&Error)
+            .create());
 
 	llvm::Function* getNbound = compiledModel->getFunction("getNbound");
 	llvm::Function* getNrates = compiledModel->getFunction("getNrates");
@@ -151,7 +149,6 @@ int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename, d
 
 ExecutableModel::~ExecutableModel()
 {
-	if (mEE) delete mEE;
 	if (bound) free(bound);
 	if (constants) free(constants);
 	if (rates) free(rates);

@@ -22,9 +22,8 @@
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 
 #include "llvm/IR/Module.h"
-#include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/SmallString.h"
-#include "llvm/ExecutionEngine/JIT.h"
+//#include "llvm/ExecutionEngine/JIT.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/ManagedStatic.h"
@@ -63,7 +62,7 @@ ModelCompiler::~ModelCompiler()
     //llvm::llvm_shutdown();
 }
 
-llvm::Module* ModelCompiler::compileModel(const char* filename)
+std::unique_ptr<llvm::Module> ModelCompiler::compileModel(const char* filename)
 {
 	void *MainAddr = (void*) (intptr_t) GetExecutablePath;
 	std::string Path = GetExecutablePath(mExecutable.c_str());
@@ -73,7 +72,7 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 
 	llvm::IntrusiveRefCntPtr < DiagnosticIDs > DiagID(new DiagnosticIDs());
 	DiagnosticsEngine Diags(DiagID, &diagOpts);
-	Driver TheDriver(Path, llvm::sys::getDefaultTargetTriple(), "a.out", /*IsProduction=*/ //false, 
+    Driver TheDriver(Path, llvm::sys::getDefaultTargetTriple(),
 	             Diags);
 //xx    Driver TheDriver(Path, llvm::sys::getHostTriple(), "a.out", /*IsProduction=*/
 //xx            false, Diags);
@@ -90,7 +89,7 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 	else Args.push_back("-O3");
 	if (mVerbose) Args.push_back("-v");
 	Args.push_back(filename);
-	llvm::OwningPtr < Compilation > C(TheDriver.BuildCompilation(Args));
+    std::unique_ptr < Compilation > C(TheDriver.BuildCompilation(Args));
 	if (!C)
 		return 0;
 
@@ -107,16 +106,16 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 		return 0;
 	}
 
-	const driver::Command *Cmd = cast < driver::Command > (*Jobs.begin());
-	if (llvm::StringRef(Cmd->getCreator().getName()) != "clang")
+    const driver::Command &Cmd = cast < driver::Command > (*Jobs.begin());
+    if (llvm::StringRef(Cmd.getCreator().getName()) != "clang")
 	{
 		Diags.Report(diag::err_fe_expected_clang_command);
 		return 0;
 	}
 
 	// Initialize a compiler invocation object from the clang (-cc1) arguments.
-	const driver::ArgStringList &CCArgs = Cmd->getArguments();
-	llvm::OwningPtr < CompilerInvocation > CI(new CompilerInvocation);
+    const driver::ArgStringList &CCArgs = Cmd.getArguments();
+    std::unique_ptr < CompilerInvocation > CI(new CompilerInvocation);
 	CompilerInvocation::CreateFromArgs(*CI,
 			const_cast<const char **>(CCArgs.data()),
 			const_cast<const char **>(CCArgs.data()) + CCArgs.size(), Diags);
@@ -132,7 +131,7 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 
 	// Create a compiler instance to handle the actual work.
 	CompilerInstance Clang;
-	Clang.setInvocation(CI.take());
+    Clang.setInvocation(CI.release());
 
 	// Create the compilers actual diagnostics engine.
 	//Clang.createDiagnostics(int(CCArgs.size()), const_cast<char**>(CCArgs.data()));
@@ -158,9 +157,9 @@ llvm::Module* ModelCompiler::compileModel(const char* filename)
 	if (!Clang.ExecuteAction(*Act))
 		return 0;
 
-	llvm::Module* compiledModel = Act->takeModule();
+    std::unique_ptr<llvm::Module> compiledModel = Act->takeModule();
 
-	return compiledModel;
+    return std::move(compiledModel);
 }
 
 #if 0

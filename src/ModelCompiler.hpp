@@ -20,7 +20,7 @@ public:
     ModelCompiler(const char* executable, bool verbose = false, bool debug = true);
 	virtual ~ModelCompiler();
 
-	class llvm::Module* compileModel(const char* filename);
+    std::unique_ptr<llvm::Module> compileModel(const char* filename);
 
 private:
 	bool mVerbose;

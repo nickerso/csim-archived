@@ -69,7 +69,7 @@ private:
 	ComputeRatesFunction mComputeRates;
 	EvaluateVariablesFunction mEvaluateVariables;
 	GetOutputsFunction mGetOutputs;
-	llvm::ExecutionEngine* mEE;
+    std::unique_ptr<llvm::ExecutionEngine> mEE;
 };
 
 #endif /* EXECUTABLEMODEL_HPP_ */

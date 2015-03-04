@@ -124,13 +124,15 @@ set(REQ_CLANG_LIBRARIES
     clangStaticAnalyzerCheckers
     clangStaticAnalyzerCore
     clangAnalysis
-    clangRewriteCore
+    clangRewrite
     clangAST
     clangLex
     clangBasic
     clangEdit
     clangLex
 )
+
+link_directories(${LLVM_LIBRARY_DIRS})
 
 # Set compiler flags
 if (WIN32)
