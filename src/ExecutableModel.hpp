@@ -68,8 +68,8 @@ private:
 	SetupFixedConstantsFunction mSetupFixedConstants;
 	ComputeRatesFunction mComputeRates;
 	EvaluateVariablesFunction mEvaluateVariables;
-	GetOutputsFunction mGetOutputs;
-    std::unique_ptr<llvm::ExecutionEngine> mEE;
+    GetOutputsFunction mGetOutputs;
+    llvm::ExecutionEngine* mEE;
 };
 
 #endif /* EXECUTABLEMODEL_HPP_ */

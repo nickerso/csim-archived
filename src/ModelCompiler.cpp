@@ -157,9 +157,7 @@ std::unique_ptr<llvm::Module> ModelCompiler::compileModel(const char* filename)
 	if (!Clang.ExecuteAction(*Act))
 		return 0;
 
-    std::unique_ptr<llvm::Module> compiledModel = Act->takeModule();
-
-    return std::move(compiledModel);
+    return Act->takeModule();
 }
 
 #if 0

@@ -53,6 +53,15 @@ ExecutableModel::ExecutableModel() :
 {
 }
 
+static llvm::ExecutionEngine *
+createExecutionEngine(std::unique_ptr<llvm::Module> M, std::string *ErrorStr)
+{
+  return llvm::EngineBuilder(std::move(M))
+      .setEngineKind(llvm::EngineKind::Either)
+      .setErrorStr(ErrorStr)
+      .create();
+}
+
 int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename, double voiInitialValue)
 {
     if (!compiler)
@@ -68,7 +77,7 @@ int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename, d
         return -2;
     }
 
-    std::unique_ptr<llvm::Module> compiledModel = compiler->compileModel(filename);
+    std::unique_ptr<llvm::Module> compiledModel(compiler->compileModel(filename));
 
     if (!compiledModel)
     {
@@ -76,28 +85,33 @@ int ExecutableModel::initialise(ModelCompiler *compiler, const char *filename, d
         return -3;
     }
 
+    // FIXME: learn how to use std::unique_ptr - no idea why this works, but its what the clang-interpreter does :)
+    llvm::Module& M = *compiledModel;
+
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
+
     std::string Error;
 
 	// This takes over managing the compiledModel object.
-    mEE = std::unique_ptr<llvm::ExecutionEngine>(llvm::EngineBuilder(std::move(compiledModel))
-            .setEngineKind(llvm::EngineKind::Either)
-            .setErrorStr(&Error)
-            .create());
+    mEE = createExecutionEngine(std::move(compiledModel), &Error);
 
-	llvm::Function* getNbound = compiledModel->getFunction("getNbound");
-	llvm::Function* getNrates = compiledModel->getFunction("getNrates");
-	llvm::Function* getNalgebraic = compiledModel->getFunction("getNalgebraic");
-	llvm::Function* getNconstants = compiledModel->getFunction("getNconstants");
-	llvm::Function* getNoutputs = compiledModel->getFunction("getNoutputs");
+    mEE->finalizeObject();
+
+    llvm::Function* getNbound = M.getFunction("getNbound");
+    llvm::Function* getNrates = M.getFunction("getNrates");
+    llvm::Function* getNalgebraic = M.getFunction("getNalgebraic");
+    llvm::Function* getNconstants = M.getFunction("getNconstants");
+    llvm::Function* getNoutputs = M.getFunction("getNoutputs");
 	if (!(getNalgebraic && getNbound && getNconstants && getNoutputs && getNrates))
 	{
 		llvm::errs() << "'getN*' function not found in module.\n";
         return -3;
 	}
-	mSetupFixedConstants = (SetupFixedConstantsFunction)(mEE->getPointerToFunction(compiledModel->getFunction("SetupFixedConstants")));
-	mComputeRates = (ComputeRatesFunction)(mEE->getPointerToFunction(compiledModel->getFunction("ComputeRates")));
-	mEvaluateVariables = (EvaluateVariablesFunction)(mEE->getPointerToFunction(compiledModel->getFunction("EvaluateVariables")));
-	mGetOutputs = (GetOutputsFunction)(mEE->getPointerToFunction(compiledModel->getFunction("GetOutputs")));
+    mSetupFixedConstants = (SetupFixedConstantsFunction)(mEE->getPointerToFunction(M.getFunction("SetupFixedConstants")));
+    mComputeRates = (ComputeRatesFunction)(mEE->getPointerToFunction(M.getFunction("ComputeRates")));
+    mEvaluateVariables = (EvaluateVariablesFunction)(mEE->getPointerToFunction(M.getFunction("EvaluateVariables")));
+    mGetOutputs = (GetOutputsFunction)(mEE->getPointerToFunction(M.getFunction("GetOutputs")));
 	if (!(mSetupFixedConstants && mComputeRates && mEvaluateVariables && mGetOutputs))
 	{
 		llvm::errs() << "'compute functions' function not found in module.\n";
