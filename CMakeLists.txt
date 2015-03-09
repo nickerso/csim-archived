@@ -12,6 +12,16 @@ IF(NOT DEFINED CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_NO_WARNINGS)
 ENDIF()
 include(InstallRequiredSystemLibraries)
 
+# Use the following variables when configuring the build from the command line to
+# set the corresponding cache variables.
+# TESTS ==> CSIM_TESTS
+set( CSIM_TESTS OFF CACHE BOOL "Enable build of automated CSim tests." )
+if( TESTS )
+  set( CSIM_TESTS "${TESTS}" CACHE BOOL "Enable build of automated CSim tests." FORCE )
+endif()
+
+# FIXME: should do the above for all options.
+
 # Options
 #OPTION(DEBUG
 #  "Build this project with debugging turned on (default)"
@@ -422,3 +432,9 @@ set(CPACK_PACKAGE_VERSION_MINOR "${CSim_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${CSim_VERSION_PATCH}")
 set(CPACK_BINARY_DRAGNDROP ON)
 include(CPack)
+
+if (CSIM_TESTS)
+  # enable testing here so that we can make use of the 'test' target
+  enable_testing()
+  add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
+endif()
