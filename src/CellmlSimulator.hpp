@@ -31,6 +31,8 @@ public:
 	CellmlSimulator();
 	~CellmlSimulator();
 
+    static std::string getVersionString();
+
 	/**
      * Serialise the model from the given URL into a string. The model is flattened before serialising
      * to the string to ensure that the string contains the complete model without requiring future

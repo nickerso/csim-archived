@@ -240,6 +240,7 @@ SET(libCSim_SRCS
 
 SET(libCSim_PUBLIC_API
   src/CellmlSimulator.hpp
+  ${PROJECT_BINARY_DIR}/csim-config.h
 )
 
 # Special treatment for generating and compiling version.c

@@ -5,6 +5,7 @@
  *      Author: dnic019
  */
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <cstdio>
 #include <cstdlib>
@@ -20,6 +21,7 @@
 #include "ExecutableModel.hpp"
 #include "integrator.hpp"
 #include "xmldoc.hpp"
+#include "csim-config.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -72,6 +74,13 @@ CellmlSimulator::~CellmlSimulator()
 	if (mConstantsCache) free(mConstantsCache);
 	if (mAlgebraicCache) free(mAlgebraicCache);
 	if (mOutputsCache) free(mOutputsCache);
+}
+
+std::string CellmlSimulator::getVersionString()
+{
+    std::ostringstream os;
+    os << CSim_VERSION_MAJOR << "." << CSim_VERSION_MINOR << "." << CSim_VERSION_PATCH;
+    return os.str();
 }
 
 std::string CellmlSimulator::serialiseCellmlFromUrl(const std::string& url)
