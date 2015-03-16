@@ -8,6 +8,8 @@
 #ifndef MODELCOMPILER_HPP_
 #define MODELCOMPILER_HPP_
 
+#include <memory> // for std::unique_ptr
+
 // forward declare from LLVM
 namespace llvm
 {
