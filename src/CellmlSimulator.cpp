@@ -12,6 +12,7 @@
 #include <cstring>
 #include <vector>
 #include <cmath>
+#include <memory>
 
 #include "CellmlSimulator.hpp"
 #include "cellml-utils.hpp"
