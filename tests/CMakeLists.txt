@@ -10,7 +10,7 @@ add_executable (versionTest
 )
 
 # Standard linking to gtest stuff.
-target_link_libraries(versionTest gtest gtest_main ${CSIM_LIBRARY_NAME})
+target_link_libraries(versionTest gtest_main ${CSIM_LIBRARY_NAME})
 
 # Extra linking for the project.
 #target_link_libraries(libcellmlTest cellml)
@@ -23,7 +23,7 @@ add_test(version-test versionTest)
 set_property(TEST version-test PROPERTY ENVIRONMENT DYLD_LIBRARY_PATH=${DIRS})
 
 # To work around a bug conditionally set the CXX_STANDARD property
-if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
-  set_target_properties(libcellmlTest PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED ON)
-endif()
+#if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+#  set_target_properties(versionTest PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED ON)
+#endif()
 
