@@ -72,7 +72,10 @@ std::unique_ptr<llvm::Module> ModelCompiler::compileModel(const char* filename)
 
 	llvm::IntrusiveRefCntPtr < DiagnosticIDs > DiagID(new DiagnosticIDs());
 	DiagnosticsEngine Diags(DiagID, &diagOpts);
-    Driver TheDriver(Path, llvm::sys::getDefaultTargetTriple(),
+    std::string bob = llvm::sys::getDefaultTargetTriple();
+    bob+= "-elf";
+    std::cerr << "***&&&& triple = " << bob << std::endl;
+    Driver TheDriver(Path, bob,
 	             Diags);
 //xx    Driver TheDriver(Path, llvm::sys::getHostTriple(), "a.out", /*IsProduction=*/
 //xx            false, Diags);
