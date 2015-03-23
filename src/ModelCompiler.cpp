@@ -72,14 +72,17 @@ std::unique_ptr<llvm::Module> ModelCompiler::compileModel(const char* filename)
 
 	llvm::IntrusiveRefCntPtr < DiagnosticIDs > DiagID(new DiagnosticIDs());
 	DiagnosticsEngine Diags(DiagID, &diagOpts);
-    std::string bob = llvm::sys::getDefaultTargetTriple();
-    bob+= "-elf";
-    std::cerr << "***&&&& triple = " << bob << std::endl;
-    Driver TheDriver(Path, bob,
-	             Diags);
+
+    // Use ELF on windows for now.
+    std::string TripleStr = llvm::sys::getProcessTriple();
+    llvm::Triple T(TripleStr);
+    if (T.isOSBinFormatCOFF())
+        T.setObjectFormat(llvm::Triple::ELF);
+    std::cerr << "**&& triple string: " << T.str() << " &&**" << std::endl;
+    Driver TheDriver(Path, T.str(), Diags);
 //xx    Driver TheDriver(Path, llvm::sys::getHostTriple(), "a.out", /*IsProduction=*/
 //xx            false, Diags);
-    TheDriver.setTitle("clang compiler");
+    TheDriver.setTitle("csim clang compiler");
 
     llvm::SmallVector<const char *, 16> Args;//(argv, argv + argc);
     std::cout << "executable = '" << mExecutable.c_str() << "'" << std::endl;
