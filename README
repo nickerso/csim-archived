@@ -1,1 +1,9 @@
+I have deprecated this version of CSim in favour of a new approach which narrows the scope of the project to simply generating
+executable functions from CellML models. See http://get.readthedocs.org/ for some information and https://github.com/nickerso/csim
+the new code base.
+
+This version of the code is no longer being maintained. The CVode example in the new CSim code base should provide most of the 
+functionality that was available in this version of CSim (https://github.com/nickerso/csim/tree/master/examples/cvode-integrator).
+
 Instructions on using CSim are available under the CSim wiki at: http://code.google.com/p/cellml-simulator/w/.
+
